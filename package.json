@@ -1,8 +1,23 @@
 {
+  "name": "agendameets-sup",
+  "version": "1.0.0",
+  "description": "Sistema para agendamentos de meets",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "engines": {
+    "node": "^18.20.8"
+  },
   "dependencies": {
     "next": "^15.5.19",
-    "node": "^26.3.0",
     "prettier": "^3.8.3",
     "prisma": "^6.19.3"
-  }
+  },
+  "scripts": {
+    "dev": "next dev"
+  },
+  "devDependencies": {},
+  "author": "",
+  "license": "MIT"
 }
