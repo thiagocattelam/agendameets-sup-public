@@ -10,14 +10,17 @@
     "node": "^18.20.8"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "next": "^15.5.19",
-    "prettier": "^3.8.3",
-    "prisma": "^6.19.3"
+    "prettier": "^3.8.3"
   },
   "scripts": {
     "dev": "next dev"
   },
-  "devDependencies": {},
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "dotenv": "^17.4.2",
+    "prisma": "^6.19.3"
+  }
 }

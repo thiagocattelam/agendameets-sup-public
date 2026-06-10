@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Atendente{
+  id String @id @default(cuid())
+  nome String
+  ativo Boolean @default(true)
+  createdAt DateTime @default(now())
+  agendamentos Agendamento[]
+}
+model Agendamento{
+  id String @id @default(cuid())
+  dataHoraInicio DateTime
+  dataHoraFim DateTime
+  cliente String
+  linkUmbler String?
+  observacoes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  atendente Atendente @relation(fields: [atendenteId], references: [id])
+  atendenteId String
+
+  assunto Assunto @relation(fields: [assuntoId], references: [id])
+  assuntoId String
+
+  status Status @relation(fields: [statusId], references: [id])
+  statusId String
+}
+model Assunto{
+  id String @id @default(cuid())
+  descricao String
+  agendamentos Agendamento[]
+}
+
+model Status{
+  id String @id @default(cuid())
+  descricao String
+  corHex String // ex: "#22c55e" para colorir o badge na lista
+  agendamentos Agendamento[]
+}
+
