@@ -1,7 +1,7 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap");
 @source "../app/**/*.{js,jsx,ts,tsx}";
 @source "../components/**/*.{js,jsx,ts,tsx}";
-@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap");
 
 @layer components {
   .menu-link {
