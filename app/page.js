@@ -2,6 +2,7 @@ export const metadata = {
   title: "AgendaMeets - Dashboard",
   description: "Dashboard para gerenciamento de reuniões e atendentes.",
 };
+
 export default function Home() {
   return (
     <div className="p-4">
