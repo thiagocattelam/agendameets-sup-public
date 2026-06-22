@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingIncludes: {
-    "/api/**/*": ["./lib/generated/prisma/**/*"],
+    "/api/**/*": ["./node_modules/.prisma/client/**/*"],
   },
 };
 
