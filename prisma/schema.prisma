@@ -34,8 +34,7 @@ model Agendamento{
   atendente Atendente @relation(fields: [atendenteId], references: [id])
   atendenteId String
 
-  assunto Assunto @relation(fields: [assuntoId], references: [id])
-  assuntoId String
+  assuntos Assunto[]
 
   status Status @relation(fields: [statusId], references: [id])
   statusId String
