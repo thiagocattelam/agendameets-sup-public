@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Tag, Users, LogOut } from "lucide-react";
+import { Home, Tag, Users, LogOut, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -9,6 +9,7 @@ import { useSession, signOut } from "next-auth/react";
 
 const navLinks = [
   { href: "/", label: "Início", icon: Home },
+  { href: "/agendamentos", label: "Agendamentos", icon: CalendarDays },
   { href: "/atendentes", label: "Atendentes", icon: Users },
   { href: "/assuntos", label: "Assuntos", icon: Tag },
 ];

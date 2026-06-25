@@ -1,12 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
-export default function AtendenteModal({
-  aberto,
-  onFechar,
-  atendente,
-  onSalvar,
-}) {
+export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }) {
   const [form, setForm] = useState({ nome: "", ativo: true });
 
   useEffect(() => {
@@ -24,9 +20,7 @@ export default function AtendenteModal({
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const url = atendente
-      ? `/api/atendentes/${atendente.id}`
-      : "/api/atendentes";
+    const url = atendente ? `/api/atendentes/${atendente.id}` : "/api/atendentes";
     const method = atendente ? "PUT" : "POST";
     await fetch(url, {
       method,
@@ -36,14 +30,23 @@ export default function AtendenteModal({
     onSalvar();
     fechar();
   }
+
   if (!aberto) return null;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
-        <h2 className="text-lg font-semibold mb-4">
-          {atendente ? "Editar Atendente" : "Novo Atendente"}
-        </h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="bg-white rounded-xl w-full max-w-sm shadow-lg">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4">
+          <h2 className="text-lg font-semibold">
+            {atendente ? "Editar Atendente" : "Novo Atendente"}
+          </h2>
+          <button
+            onClick={fechar}
+            className="text-gray-400 hover:text-gray-700 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 pb-6 flex flex-col gap-4">
           <div>
             <label className="text-sm font-medium">Nome</label>
             <input
@@ -53,14 +56,7 @@ export default function AtendenteModal({
               required
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={fechar}
-              className="px-4 py-2 rounded-xl border text-sm"
-            >
-              Cancelar
-            </button>
+          <div className="flex justify-end">
             <button
               type="submit"
               className="px-4 py-2 rounded-xl text-white text-sm"
