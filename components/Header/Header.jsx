@@ -63,20 +63,18 @@ export default function Header() {
   return (
     <aside
       ref={ref}
-      className={`${isOpen ? "w-[280px]" : "w-[60px]"} flex-shrink-0 sticky top-0 h-screen overflow-y-auto bg-white border-r border-gray-200 flex flex-col transition-all duration-200`}
+      className={`${isOpen ? "w-[280px]" : "w-[60px]"} fixed top-0 left-0 z-40 h-screen overflow-y-auto bg-white border-r border-gray-200 flex flex-col transition-all duration-200`}
       style={{ fontFamily: "Barlow, sans-serif" }}
     >
       {/* Botão de abrir/fechar a sidebar */}
       <div className="px-3 py-3">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center py-[10px] rounded-lg w-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors duration-150 ${isOpen ? "gap-3 px-3" : "justify-center"}`}
+          className="flex items-center py-[10px] rounded-lg w-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors duration-150"
         >
-          {isOpen ? (
-            <X size={20} className="shrink-0" />
-          ) : (
-            <Menu size={20} className="shrink-0" />
-          )}
+          <span className="w-9 flex items-center justify-center shrink-0">
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </span>
         </button>
       </div>
 
@@ -88,14 +86,22 @@ export default function Header() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center py-[10px] rounded-lg text-sm font-semibold no-underline transition-colors duration-150 ${isOpen ? "gap-3 px-3" : "justify-center"} ${
+              className={`flex items-center py-[10px] rounded-lg text-sm font-semibold no-underline transition-colors duration-150 ${
                 active
                   ? "bg-[#8b47ff] text-white"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"
               }`}
             >
-              <Icon size={20} className="shrink-0" />
-              {isOpen && label}
+              <span className="w-9 flex items-center justify-center shrink-0">
+                <Icon size={20} />
+              </span>
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-[opacity,max-width] duration-200 ${
+                  isOpen ? "max-w-[200px] opacity-100" : "max-w-0 opacity-0"
+                }`}
+              >
+                {label}
+              </span>
             </Link>
           );
         })}
@@ -108,23 +114,27 @@ export default function Header() {
           <button
             ref={userButtonRef}
             onClick={() => setPopoverAberto(!popoverAberto)}
-            className={`flex items-center w-full ${isOpen ? "gap-3" : "justify-center"}`}
+            className="flex items-center w-full"
           >
-            <img
-              src={session.user.image}
-              alt={session.user.name}
-              className="w-8 h-8 rounded-full shrink-0"
-            />
-            {isOpen && (
-              <div className="overflow-hidden text-left">
-                <p className="text-sm font-semibold text-gray-800 truncate">
-                  {session.user.name}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {session.user.email}
-                </p>
-              </div>
-            )}
+            <span className="w-9 flex items-center justify-center shrink-0">
+              <img
+                src={session.user.image}
+                alt={session.user.name}
+                className="w-8 h-8 rounded-full"
+              />
+            </span>
+            <div
+              className={`overflow-hidden text-left transition-[opacity,max-width] duration-200 ${
+                isOpen ? "max-w-[200px] opacity-100" : "max-w-0 opacity-0"
+              }`}
+            >
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {session.user.name}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {session.user.email}
+              </p>
+            </div>
           </button>
 
           {/* Popover com detalhes do usuário — posicionado com fixed para sair da sidebar */}

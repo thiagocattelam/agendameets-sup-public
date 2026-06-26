@@ -4,10 +4,8 @@ import Providers from "../../components/Providers";
 export default function HomeLayout({ children }) {
   return (
     <Providers>
-      <div className="flex min-h-screen">
-        <Header />
-        <main className="flex-1 min-w-0 bg-gray-50">{children}</main>
-      </div>
+      <Header />
+      <main className="min-h-screen bg-gray-50 pl-[60px]">{children}</main>
     </Providers>
   );
 }

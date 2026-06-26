@@ -24,7 +24,7 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="max-w-6xl mx-auto px-6 py-8">
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">Dashboard</h2>
         <p className="text-sm text-gray-400 mt-0.5">Painel de controle do AgendaMeets</p>

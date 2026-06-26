@@ -121,7 +121,7 @@ export default function AgendamentosPage() {
   const dias = Object.keys(agrupados).sort();
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-8">
+    <div className="max-w-6xl mx-auto px-6 py-8">
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
