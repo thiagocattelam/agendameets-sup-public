@@ -11,7 +11,7 @@ npx prisma generate      # Regenerate Prisma client after schema changes
 npx prisma studio        # Open Prisma Studio to inspect the database
 ```
 
-No lint or test scripts are configured.
+No lint or test scripts configured.
 
 ## Architecture
 
@@ -23,7 +23,7 @@ Next.js 15 (App Router) + React 19 + Tailwind CSS 4 + Prisma 6 + PostgreSQL.
 - `app/api/` — API Route Handlers (Next.js Route Handlers, not Pages Router).
 - `components/Header/Header.jsx` — collapsible sidebar (not a top bar), shared via `app/layout.js`.
 - `lib/sheets.js` — Google Sheets read client, authenticated via service account.
-- `lib/generated/prisma/` — auto-generated Prisma client (do not edit manually). Import from here, not from `@prisma/client`.
+- `lib/generated/prisma/` — stale generated client from a previous setup; **do not use**. The active client is generated into `node_modules/.prisma/client` (via `npx prisma generate`) and imported via `@prisma/client`.
 - `prisma/schema.prisma` — source of truth for the DB schema.
 - `prisma.config.ts` — Prisma config; loads `.env` via `dotenv/config`.
 
@@ -32,7 +32,7 @@ Next.js 15 (App Router) + React 19 + Tailwind CSS 4 + Prisma 6 + PostgreSQL.
 | Model | Key fields |
 |---|---|
 | `Atendente` | `nome`, `ativo` |
-| `Agendamento` | `dataHoraInicio/Fim`, `cliente`, `linkUmbler?`, FK to Atendente/Assunto/Status |
+| `Agendamento` | `dataHoraInicio/Fim`, `cliente`, `linkUmbler?`, `observacoes?`, FK to Atendente/Assunto/Status |
 | `Assunto` | `descricao` |
 | `Status` | `descricao`, `corHex` (hex color for badge display) |
 
