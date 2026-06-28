@@ -7,6 +7,8 @@ export async function GET(request) {
   const inicio = searchParams.get("inicio");
   const fim = searchParams.get("fim");
   const atendenteId = searchParams.get("atendenteId");
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") ?? "15", 10));
 
   const where = {};
 
@@ -21,17 +23,22 @@ export async function GET(request) {
     where.atendenteId = atendenteId;
   }
 
-  const agendamentos = await prisma.agendamento.findMany({
-    where,
-    include: {
-      atendente: true,
-      assuntos: true,
-      status: true,
-    },
-    orderBy: { dataHoraInicio: "asc" },
-  });
+  const [data, total] = await Promise.all([
+    prisma.agendamento.findMany({
+      where,
+      include: {
+        atendente: true,
+        assuntos: true,
+        status: true,
+      },
+      orderBy: { dataHoraInicio: "asc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.agendamento.count({ where }),
+  ]);
 
-  return Response.json(agendamentos);
+  return Response.json({ data, total });
 }
 
 export async function POST(request) {
