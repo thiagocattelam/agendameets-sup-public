@@ -148,6 +148,7 @@ export default function AgendamentoModal({
   const [form, setForm] = useState(emptyForm);
 
   const [tentouSalvar, setTentouSalvar] = useState(false);
+  const [salvando, setSalvando] = useState(false);
   const [dataPickerAberto, setDataPickerAberto] = useState(false);
   const [horaInicioAberto, setHoraInicioAberto] = useState(false);
   const [horaFimAberto, setHoraFimAberto] = useState(false);
@@ -223,29 +224,35 @@ export default function AgendamentoModal({
     e.preventDefault();
     setTentouSalvar(true);
     if (!form.data || !form.horaInicio || !form.horaFim || !form.atendenteId || !form.statusId) return;
-    const body = {
-      dataHoraInicio: new Date(`${form.data}T${form.horaInicio}:00`).toISOString(),
-      dataHoraFim: new Date(`${form.data}T${form.horaFim}:00`).toISOString(),
-      cliente: form.cliente,
-      linkUmbler: form.linkUmbler || null,
-      observacoes: form.observacoes || null,
-      alertaMinutos: form.alertaMinutos !== "" ? Number(form.alertaMinutos) : null,
-      atendenteId: form.atendenteId,
-      statusId: form.statusId,
-      assuntoIds: form.assuntoIds,
-    };
+    if (salvando) return;
+    setSalvando(true);
+    try {
+      const body = {
+        dataHoraInicio: new Date(`${form.data}T${form.horaInicio}:00`).toISOString(),
+        dataHoraFim: new Date(`${form.data}T${form.horaFim}:00`).toISOString(),
+        cliente: form.cliente,
+        linkUmbler: form.linkUmbler || null,
+        observacoes: form.observacoes || null,
+        alertaMinutos: form.alertaMinutos !== "" ? Number(form.alertaMinutos) : null,
+        atendenteId: form.atendenteId,
+        statusId: form.statusId,
+        assuntoIds: form.assuntoIds,
+      };
 
-    const url = agendamento ? `/api/agendamentos/${agendamento.id}` : "/api/agendamentos";
-    const method = agendamento ? "PUT" : "POST";
+      const url = agendamento ? `/api/agendamentos/${agendamento.id}` : "/api/agendamentos";
+      const method = agendamento ? "PUT" : "POST";
 
-    await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+      await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    onSalvar();
-    fechar();
+      onSalvar();
+      fechar();
+    } finally {
+      setSalvando(false);
+    }
   }
 
   const dataDate = form.data ? new Date(form.data + "T12:00:00") : null;
@@ -550,10 +557,11 @@ export default function AgendamentoModal({
           <div className="border-t border-gray-100 px-6 py-4 flex justify-end items-center flex-shrink-0">
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-white text-sm font-semibold"
+              disabled={salvando}
+              className="px-5 py-2 rounded-xl text-white text-sm font-semibold disabled:opacity-60"
               style={{ backgroundColor: "#8b47ff" }}
             >
-              Salvar
+              {salvando ? "Salvando..." : "Salvar"}
             </button>
           </div>
         </form>

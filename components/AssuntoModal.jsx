@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 
 export default function AssuntoModal({ aberto, onFechar, assunto, onSalvar }) {
   const [form, setForm] = useState({ descricao: "" });
+  const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     if (aberto) {
@@ -29,15 +30,21 @@ export default function AssuntoModal({ aberto, onFechar, assunto, onSalvar }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const url = assunto ? `/api/assuntos/${assunto.id}` : "/api/assuntos";
-    const method = assunto ? "PUT" : "POST";
-    await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    onSalvar();
-    fechar();
+    if (salvando) return;
+    setSalvando(true);
+    try {
+      const url = assunto ? `/api/assuntos/${assunto.id}` : "/api/assuntos";
+      const method = assunto ? "PUT" : "POST";
+      await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      onSalvar();
+      fechar();
+    } finally {
+      setSalvando(false);
+    }
   }
 
   if (!aberto) return null;
@@ -68,10 +75,11 @@ export default function AssuntoModal({ aberto, onFechar, assunto, onSalvar }) {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-white text-sm"
+              disabled={salvando}
+              className="px-4 py-2 rounded-xl text-white text-sm disabled:opacity-60"
               style={{ backgroundColor: "#8b47ff" }}
             >
-              Salvar
+              {salvando ? "Salvando..." : "Salvar"}
             </button>
           </div>
         </form>
