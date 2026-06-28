@@ -15,8 +15,11 @@ export async function POST(request) {
   if (!nome?.trim()) {
     return Response.json({ error: "O nome é obrigatório." }, { status: 400 });
   }
+  if (!email?.trim()) {
+    return Response.json({ error: "O e-mail é obrigatório." }, { status: 400 });
+  }
   const atendente = await prisma.atendente.create({
-    data: { nome, ativo, email: email || null },
+    data: { nome, ativo, email },
   });
   return Response.json(atendente);
 }

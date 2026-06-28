@@ -73,6 +73,7 @@ export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }
               className="border rounded-lg w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required={!atendente}
             />
           </div>
           <div className="flex justify-end">
