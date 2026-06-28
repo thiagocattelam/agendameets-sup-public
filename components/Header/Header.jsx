@@ -7,6 +7,33 @@ import { Menu, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 
+function UserAvatar({ user, size }) {
+  const [imgError, setImgError] = useState(false);
+  const dim = size === "md" ? "w-10 h-10 text-sm mb-2" : "w-8 h-8 text-xs";
+
+  if (user.image && !imgError) {
+    return (
+      <img
+        src={user.image}
+        alt={user.name}
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        className={`${size === "md" ? "w-10 h-10 mb-2" : "w-8 h-8"} rounded-full`}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${dim} rounded-full flex items-center justify-center font-semibold shrink-0`}
+      style={{ backgroundColor: "#ede9fe", color: "#6d28d9" }}
+    >
+      {user.name?.slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
 const navLinks = [
   { href: "/", label: "Início", icon: Home },
   { href: "/agendamentos", label: "Agendamentos", icon: CalendarDays },
@@ -117,11 +144,7 @@ export default function Header() {
             className="flex items-center w-full"
           >
             <span className="w-9 flex items-center justify-center shrink-0">
-              <img
-                src={session.user.image}
-                alt={session.user.name}
-                className="w-8 h-8 rounded-full"
-              />
+              <UserAvatar user={session.user} size="sm" />
             </span>
             <div
               className={`overflow-hidden text-left transition-[opacity,max-width] duration-200 ${
@@ -154,10 +177,7 @@ export default function Header() {
                   className="bg-white border border-gray-200 rounded-lg shadow-lg p-3"
                   ref={popoverRef}
                 >
-                  <img
-                    src={session.user.image}
-                    className="w-10 h-10 rounded-full mb-2"
-                  />
+                  <UserAvatar user={session.user} size="md" />
                   <p className="text-sm font-semibold text-gray-800">
                     {session.user.name}
                   </p>

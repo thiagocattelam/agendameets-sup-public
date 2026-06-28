@@ -10,13 +10,13 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const { nome, ativo } = await request.json();
+  const { nome, ativo, email } = await request.json();
 
   if (!nome?.trim()) {
     return Response.json({ error: "O nome é obrigatório." }, { status: 400 });
   }
   const atendente = await prisma.atendente.create({
-    data: { nome, ativo },
+    data: { nome, ativo, email: email || null },
   });
   return Response.json(atendente);
 }

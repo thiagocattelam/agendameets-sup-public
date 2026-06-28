@@ -3,18 +3,18 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }) {
-  const [form, setForm] = useState({ nome: "", ativo: true });
+  const [form, setForm] = useState({ nome: "", email: "", ativo: true });
 
   useEffect(() => {
     if (atendente) {
-      setForm({ nome: atendente.nome, ativo: atendente.ativo });
+      setForm({ nome: atendente.nome, email: atendente.email ?? "", ativo: atendente.ativo });
     } else {
-      setForm({ nome: "", ativo: true });
+      setForm({ nome: "", email: "", ativo: true });
     }
   }, [atendente]);
 
   function fechar() {
-    setForm({ nome: "", ativo: true });
+    setForm({ nome: "", email: "", ativo: true });
     onFechar();
   }
 
@@ -25,7 +25,7 @@ export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }
     await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, email: form.email || null }),
     });
     onSalvar();
     fechar();
@@ -50,10 +50,20 @@ export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }
           <div>
             <label className="text-sm font-medium">Nome</label>
             <input
-              className="border rounded w-full px-3 py-2 mt-1"
+              className="border rounded-lg w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
               value={form.nome}
               onChange={(e) => setForm({ ...form, nome: e.target.value })}
               required
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">E-mail</label>
+            <input
+              type="email"
+              placeholder="nome@clinicaexperts.com.br"
+              className="border rounded-lg w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
           <div className="flex justify-end">
