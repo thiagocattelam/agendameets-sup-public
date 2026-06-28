@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, forwardRef } from "react";
-import { ExternalLink, X, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ExternalLink, X, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, NotebookPen } from "lucide-react";
 import AgendamentoModal from "../../../components/AgendamentoModal";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
@@ -433,18 +433,29 @@ export default function AgendamentosPage() {
                         )}
                       </div>
 
-                      {/* Link Umbler */}
-                      {ag.linkUmbler && (
-                        <a
-                          href={ag.linkUmbler}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-700 hover:underline mt-0.5 w-fit"
-                        >
-                          <ExternalLink size={11} />
-                          Abrir no Umbler
-                        </a>
-                      )}
+                      {/* Link Umbler + Observações */}
+                      <div className="flex items-center gap-3 mt-0.5">
+                        {ag.linkUmbler && (
+                          <a
+                            href={ag.linkUmbler}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-700 hover:underline w-fit"
+                          >
+                            <ExternalLink size={11} />
+                            Abrir no Umbler
+                          </a>
+                        )}
+                        {ag.observacoes && (
+                          <div className="relative group w-fit">
+                            <NotebookPen size={13} className="text-gray-400 hover:text-gray-600 cursor-default transition-colors" />
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-20 w-64 bg-white border border-gray-200 text-gray-700 text-xs rounded-xl px-3 py-2.5 shadow-lg pointer-events-none whitespace-pre-wrap break-words">
+                              {ag.observacoes}
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-200" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Dropdown menu */}
                       {menuAberto === ag.id && (

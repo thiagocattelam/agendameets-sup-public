@@ -37,6 +37,7 @@ const emptyForm = {
   horaFim: "",
   cliente: "",
   linkUmbler: "",
+  observacoes: "",
   atendenteId: "",
   statusId: "",
   assuntoIds: [],
@@ -186,6 +187,7 @@ export default function AgendamentoModal({
         horaFim: toLocalTime(agendamento.dataHoraFim),
         cliente: agendamento.cliente,
         linkUmbler: agendamento.linkUmbler ?? "",
+        observacoes: agendamento.observacoes ?? "",
         atendenteId: agendamento.atendenteId,
         statusId: agendamento.statusId,
         assuntoIds: agendamento.assuntos.map((a) => a.id),
@@ -224,6 +226,7 @@ export default function AgendamentoModal({
       dataHoraFim: new Date(`${form.data}T${form.horaFim}:00`).toISOString(),
       cliente: form.cliente,
       linkUmbler: form.linkUmbler || null,
+      observacoes: form.observacoes || null,
       atendenteId: form.atendenteId,
       statusId: form.statusId,
       assuntoIds: form.assuntoIds,
@@ -507,6 +510,20 @@ export default function AgendamentoModal({
                 onChange={(e) => setForm({ ...form, linkUmbler: e.target.value })}
                 placeholder="https://..."
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300"
+              />
+            </div>
+
+            {/* Observações */}
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Observações <span className="font-normal text-gray-400">(opcional)</span>
+              </label>
+              <textarea
+                value={form.observacoes}
+                onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
+                placeholder="Anotações sobre o agendamento..."
+                rows={3}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
               />
             </div>
           </div>

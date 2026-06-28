@@ -22,7 +22,7 @@ export async function POST() {
     let criados = 0, ignorados = 0;
 
     for (const row of rows) {
-      const [dataStr, , horaInicio, horaFim, nomeAtendente, cliente, nomeAssunto, linkUmbler, nomeStatus] = row;
+      const [dataStr, , horaInicio, horaFim, nomeAtendente, cliente, nomeAssunto, linkUmbler, nomeStatus, observacoes] = row;
 
       if (!linkUmbler?.startsWith("http")) {
         ignorados++;
@@ -50,7 +50,7 @@ export async function POST() {
       } else {
         await prisma.agendamento.create({
           data: {
-            dataHoraInicio, dataHoraFim, cliente, linkUmbler,
+            dataHoraInicio, dataHoraFim, cliente, linkUmbler, observacoes: observacoes ?? null,
             atendenteId: atendente.id, statusId: status.id,
             assuntos: { connect: assuntosConnect },
           },

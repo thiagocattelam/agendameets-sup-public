@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export async function PUT(request, { params }) {
   const { id } = await params;
-  const { dataHoraInicio, dataHoraFim, cliente, linkUmbler, atendenteId, statusId, assuntoIds } =
+  const { dataHoraInicio, dataHoraFim, cliente, linkUmbler, observacoes, atendenteId, statusId, assuntoIds } =
     await request.json();
 
   const agendamento = await prisma.agendamento.update({
@@ -14,6 +14,7 @@ export async function PUT(request, { params }) {
       dataHoraFim: new Date(dataHoraFim),
       cliente,
       linkUmbler: linkUmbler || null,
+      observacoes: observacoes || null,
       atendenteId,
       statusId,
       assuntos: { set: assuntoIds.map((id) => ({ id })) },
