@@ -1,15 +1,11 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
 import { PrismaClient } from "@prisma/client";
+import { authConfig } from "@/auth.config";
 
 const prisma = new PrismaClient();
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [Google],
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
+  ...authConfig,
   callbacks: {
     async signIn({ profile }) {
       return profile?.email?.endsWith("@clinicaexperts.com.br") ?? false;
