@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, forwardRef } from "react";
-import { ExternalLink, X, CalendarDays, ChevronDown } from "lucide-react";
+import { ExternalLink, X, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import AgendamentoModal from "../../../components/AgendamentoModal";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
@@ -65,6 +65,14 @@ function formatHora(dateStr) {
   });
 }
 
+function getPageNumbers(current, total) {
+  const start = Math.max(1, current - 2);
+  const end = Math.min(total, current + 2);
+  const pages = [];
+  for (let i = start; i <= end; i++) pages.push(i);
+  return pages;
+}
+
 function formatDataCabecalho(dateStr) {
   return new Date(dateStr + "T12:00:00").toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -83,9 +91,13 @@ export default function AgendamentosPage() {
   const [atendenteId, setAtendenteId] = useState("");
 
   const [agendamentos, setAgendamentos] = useState([]);
+  const [totalAgendamentos, setTotalAgendamentos] = useState(0);
   const [atendentes, setAtendentes] = useState([]);
   const [statusList, setStatusList] = useState([]);
   const [assuntosList, setAssuntosList] = useState([]);
+  const [pagina, setPagina] = useState(1);
+
+  const PAGE_SIZE = 15;
 
   const [calendarAberto, setCalendarAberto] = useState(false);
 
@@ -112,7 +124,8 @@ export default function AgendamentosPage() {
   }, []);
 
   useEffect(() => {
-    carregarAgendamentos();
+    setPagina(1);
+    carregarAgendamentos(1);
   }, [dataInicio, dataFim, atendenteId]);
 
   useEffect(() => {
@@ -128,15 +141,24 @@ export default function AgendamentosPage() {
     return () => document.removeEventListener("mousedown", handleClickFora);
   }, []);
 
-  function carregarAgendamentos() {
+  function mudarPagina(novaPagina) {
+    if (novaPagina > pagina) window.scrollTo(0, 0);
+    setPagina(novaPagina);
+    carregarAgendamentos(novaPagina);
+  }
+
+  function carregarAgendamentos(page = pagina) {
     if (!dataInicio || !dataFim) return;
     const inicio = new Date(dataInicio + "T00:00:00").toISOString();
     const fim = new Date(dataFim + "T23:59:59").toISOString();
-    const params = new URLSearchParams({ inicio, fim });
+    const params = new URLSearchParams({ inicio, fim, page, pageSize: PAGE_SIZE });
     if (atendenteId) params.set("atendenteId", atendenteId);
     fetch(`/api/agendamentos?${params}`)
       .then((r) => r.json())
-      .then(setAgendamentos);
+      .then(({ data, total }) => {
+        setAgendamentos(data);
+        setTotalAgendamentos(total);
+      });
   }
 
   function handleAdicionar() {
@@ -165,6 +187,8 @@ export default function AgendamentosPage() {
     carregarAgendamentos();
   }
 
+  const totalPaginas = Math.ceil(totalAgendamentos / PAGE_SIZE);
+
   const agrupados = {};
   for (const ag of agendamentos) {
     const key = ag.dataHoraInicio.slice(0, 10);
@@ -181,7 +205,7 @@ export default function AgendamentosPage() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Agendamentos</h2>
           <p className="text-sm text-gray-400 mt-0.5">
-            {agendamentos.length} registros
+            {totalAgendamentos} registro{totalAgendamentos !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -248,62 +272,66 @@ export default function AgendamentosPage() {
           }
         />
         <div className="flex items-center gap-2">
+          {(() => {
+            const hojeAtivo = dataInicio === dataFim && dataInicio === hoje();
+            const semanaAtivo = dataInicio === getMondayOf(new Date()) && dataFim === addDays(getMondayOf(new Date()), 6);
+            const ativo = "bg-purple-600 text-white font-medium shadow-sm";
+            const inativo = "bg-gray-100 text-gray-500 hover:bg-gray-200";
+            return (
+              <>
+                <button
+                  onClick={() => {
+                    const d = new Date(hoje() + "T12:00:00");
+                    setDateRange([d, d]);
+                  }}
+                  className={`px-4 py-1.5 text-xs rounded-full transition ${hojeAtivo ? ativo : inativo}`}
+                >
+                  Hoje
+                </button>
+                <button
+                  onClick={() => {
+                    const seg = getMondayOf(new Date());
+                    setDateRange([
+                      new Date(seg + "T12:00:00"),
+                      new Date(addDays(seg, 6) + "T12:00:00"),
+                    ]);
+                  }}
+                  className={`px-4 py-1.5 text-xs rounded-full transition ${semanaAtivo ? ativo : inativo}`}
+                >
+                  Esta semana
+                </button>
+              </>
+            );
+          })()}
           <button
             onClick={() => {
-              const d = new Date(hoje() + "T12:00:00");
-              setDateRange([d, d]);
-            }}
-            className="px-4 py-1.5 text-xs rounded-full bg-purple-50 text-purple-600 font-medium hover:bg-purple-100 transition"
-          >
-            Hoje
-          </button>
-          <button
-            onClick={() => {
-              const seg = getMondayOf(new Date());
-              setDateRange([
-                new Date(seg + "T12:00:00"),
-                new Date(addDays(seg, 6) + "T12:00:00"),
+              const step = dataInicio === dataFim ? 1 : 7;
+              setDateRange(([s, e]) => [
+                new Date(addDays(s.toISOString().slice(0, 10), -step) + "T12:00:00"),
+                new Date(addDays((e ?? s).toISOString().slice(0, 10), -step) + "T12:00:00"),
               ]);
             }}
-            className="px-4 py-1.5 text-xs rounded-full bg-purple-50 text-purple-600 font-medium hover:bg-purple-100 transition"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
           >
-            Esta semana
+            <ChevronLeft size={15} />
           </button>
           <button
-            onClick={() =>
+            onClick={() => {
+              const step = dataInicio === dataFim ? 1 : 7;
               setDateRange(([s, e]) => [
-                new Date(
-                  addDays(s.toISOString().slice(0, 10), -7) + "T12:00:00",
-                ),
-                new Date(
-                  addDays((e ?? s).toISOString().slice(0, 10), -7) +
-                    "T12:00:00",
-                ),
-              ])
-            }
-            className="px-4 py-1.5 text-xs rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                new Date(addDays(s.toISOString().slice(0, 10), step) + "T12:00:00"),
+                new Date(addDays((e ?? s).toISOString().slice(0, 10), step) + "T12:00:00"),
+              ]);
+            }}
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
           >
-            ← Anterior
-          </button>
-          <button
-            onClick={() =>
-              setDateRange(([s, e]) => [
-                new Date(
-                  addDays(s.toISOString().slice(0, 10), 7) + "T12:00:00",
-                ),
-                new Date(
-                  addDays((e ?? s).toISOString().slice(0, 10), 7) + "T12:00:00",
-                ),
-              ])
-            }
-            className="px-4 py-1.5 text-xs rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
-          >
-            Próxima →
+            <ChevronRight size={15} />
           </button>
         </div>
       </div>
 
       {/* Lista */}
+      <div>
       {dias.length === 0 ? (
         <div className="text-center py-20 text-gray-400 text-sm">
           Nenhum agendamento nesse período.
@@ -417,6 +445,54 @@ export default function AgendamentosPage() {
               </div>
             );
           })}
+        </div>
+      )}
+      </div>
+
+      {/* Paginação */}
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-center gap-1 mt-8">
+          <button
+            onClick={() => mudarPagina(1)}
+            disabled={pagina === 1}
+            className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronsLeft size={15} />
+          </button>
+          <button
+            onClick={() => mudarPagina(pagina - 1)}
+            disabled={pagina === 1}
+            className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={15} />
+          </button>
+          {getPageNumbers(pagina, totalPaginas).map((n) => (
+            <button
+              key={n}
+              onClick={() => mudarPagina(n)}
+              className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium transition ${
+                n === pagina
+                  ? "bg-purple-600 text-white"
+                  : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+          <button
+            onClick={() => mudarPagina(pagina + 1)}
+            disabled={pagina === totalPaginas}
+            className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronRight size={15} />
+          </button>
+          <button
+            onClick={() => mudarPagina(totalPaginas)}
+            disabled={pagina === totalPaginas}
+            className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronsRight size={15} />
+          </button>
         </div>
       )}
 
