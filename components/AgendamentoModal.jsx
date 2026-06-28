@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, forwardRef } from "react";
-import { X, ChevronDown, CalendarDays, Clock } from "lucide-react";
+import { X, ChevronDown, CalendarDays, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 
@@ -283,6 +283,33 @@ export default function AgendamentoModal({
                   popperPlacement="bottom-start"
                   dateFormat="dd/MM/yyyy"
                   locale="pt-BR"
+                  renderCustomHeader={({
+                    date,
+                    decreaseMonth,
+                    increaseMonth,
+                    decreaseYear,
+                    increaseYear,
+                    prevMonthButtonDisabled,
+                    nextMonthButtonDisabled,
+                  }) => (
+                    <div className="flex items-center justify-between px-2 gap-1">
+                      <button onClick={decreaseYear} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
+                        <ChevronsLeft size={12} />
+                      </button>
+                      <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30">
+                        <ChevronLeft size={12} />
+                      </button>
+                      <span className="flex-1 text-center text-sm font-bold text-gray-700">
+                        {date.toLocaleDateString("pt-BR", { month: "long" })} {date.getFullYear()}
+                      </span>
+                      <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30">
+                        <ChevronRight size={12} />
+                      </button>
+                      <button onClick={increaseYear} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
+                        <ChevronsRight size={12} />
+                      </button>
+                    </div>
+                  )}
                   customInput={
                     <DateInput
                       isOpen={dataPickerAberto}
