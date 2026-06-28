@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import AtendenteModal from "../../../components/AtendenteModal";
 
 export default function AtendentesPage() {
@@ -11,7 +11,11 @@ export default function AtendentesPage() {
   const [atendenteDeletar, setAtendenteDeletar] = useState(null);
   const [menuAberto, setMenuAberto] = useState(null);
   const menuRef = useRef(null);
+  const filtroDropdownRef = useRef(null);
+  const [filtroDropdownAberto, setFiltroDropdownAberto] = useState(false);
   const [busca, setBusca] = useState("");
+  const [filtroAtivo, setFiltroAtivo] = useState("ativos");
+  const [pendingToggle, setPendingToggle] = useState({});
 
   async function carregarAtendentes() {
     const res = await fetch("/api/atendentes");
@@ -28,18 +32,26 @@ export default function AtendentesPage() {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuAberto(null);
       }
+      if (filtroDropdownRef.current && !filtroDropdownRef.current.contains(e.target)) {
+        setFiltroDropdownAberto(false);
+      }
     }
     document.addEventListener("mousedown", handleClickFora);
     return () => document.removeEventListener("mousedown", handleClickFora);
   }, []);
 
   async function handleToggleAtivo(atendente) {
+    const novoAtivo = !atendente.ativo;
+    setPendingToggle((prev) => ({ ...prev, [atendente.id]: novoAtivo }));
     await fetch(`/api/atendentes/${atendente.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome: atendente.nome, ativo: !atendente.ativo }),
+      body: JSON.stringify({ nome: atendente.nome, ativo: novoAtivo }),
     });
-    carregarAtendentes();
+    setTimeout(() => {
+      carregarAtendentes();
+      setPendingToggle((prev) => { const n = { ...prev }; delete n[atendente.id]; return n; });
+    }, 700);
   }
 
   function handleAdicionar() {
@@ -76,7 +88,9 @@ export default function AtendentesPage() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Atendentes</h2>
           <p className="text-sm text-gray-400 mt-0.5">
-            {atendentes.length} registros
+            {atendentes
+              .filter((a) => filtroAtivo === "ativos" ? a.ativo : filtroAtivo === "inativos" ? !a.ativo : true)
+              .filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase())).length} registros
           </p>
         </div>
         <button
@@ -86,6 +100,44 @@ export default function AtendentesPage() {
         >
           + Adicionar
         </button>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-2xl px-5 py-3 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="relative" ref={filtroDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setFiltroDropdownAberto((v) => !v)}
+            className={`flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none transition-colors w-36 ${filtroDropdownAberto ? "border-purple-400 ring-2 ring-purple-200" : "border-gray-200 hover:border-gray-300"}`}
+          >
+            <span>{{ ativos: "Ativos", inativos: "Inativos", todos: "Todos" }[filtroAtivo]}</span>
+            <ChevronDown size={14} className={`text-gray-400 transition-transform ${filtroDropdownAberto ? "rotate-180" : ""}`} />
+          </button>
+          {filtroDropdownAberto && (
+            <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-full overflow-hidden">
+              {[
+                { label: "Ativos", value: "ativos" },
+                { label: "Inativos", value: "inativos" },
+                { label: "Todos", value: "todos" },
+              ].map((op) => (
+                <button
+                  key={op.value}
+                  type="button"
+                  onClick={() => { setFiltroAtivo(op.value); setFiltroDropdownAberto(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${filtroAtivo === op.value ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <input
+          type="text"
+          placeholder="Buscar..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -98,19 +150,12 @@ export default function AtendentesPage() {
               <th className="text-left px-8 py-3 text-sm font-semibold text-gray-600">
                 Ativo
               </th>
-              <th className="px-6 py-3 text-right">
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm text-gray-700 font-normal focus:outline-none focus:ring-2 focus:ring-purple-300"
-                />
-              </th>
+              <th className="px-6 py-3" />
             </tr>
           </thead>
           <tbody>
             {atendentes
+              .filter((a) => filtroAtivo === "ativos" ? a.ativo : filtroAtivo === "inativos" ? !a.ativo : true)
               .filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase()))
               .map((a) => (
                 <tr
@@ -134,12 +179,12 @@ export default function AtendentesPage() {
                     <button
                       onClick={() => handleToggleAtivo(a)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        a.ativo ? "bg-green-500" : "bg-gray-300"
+                        (pendingToggle[a.id] ?? a.ativo) ? "bg-green-500" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                          a.ativo ? "translate-x-4.5" : "translate-x-0.5"
+                          (pendingToggle[a.id] ?? a.ativo) ? "translate-x-4.5" : "translate-x-0.5"
                         }`}
                       />
                     </button>
