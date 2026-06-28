@@ -4,11 +4,11 @@ const prisma = new PrismaClient();
 
 export async function PUT(request, { params }) {
   const { id } = await params;
-  const { nome, ativo, email } = await request.json();
+  const { nome, ativo, email, alertaMinutos } = await request.json();
 
   const atendente = await prisma.atendente.update({
     where: { id },
-    data: { nome, ativo, email: email || null },
+    data: { nome, ativo, email: email || null, alertaMinutos: alertaMinutos ?? null },
   });
   return Response.json(atendente);
 }

@@ -38,6 +38,7 @@ const emptyForm = {
   cliente: "",
   linkUmbler: "",
   observacoes: "",
+  alertaMinutos: "",
   atendenteId: "",
   statusId: "",
   assuntoIds: [],
@@ -188,6 +189,7 @@ export default function AgendamentoModal({
         cliente: agendamento.cliente,
         linkUmbler: agendamento.linkUmbler ?? "",
         observacoes: agendamento.observacoes ?? "",
+        alertaMinutos: agendamento.alertaMinutos != null ? String(agendamento.alertaMinutos) : "",
         atendenteId: agendamento.atendenteId,
         statusId: agendamento.statusId,
         assuntoIds: agendamento.assuntos.map((a) => a.id),
@@ -227,6 +229,7 @@ export default function AgendamentoModal({
       cliente: form.cliente,
       linkUmbler: form.linkUmbler || null,
       observacoes: form.observacoes || null,
+      alertaMinutos: form.alertaMinutos !== "" ? Number(form.alertaMinutos) : null,
       atendenteId: form.atendenteId,
       statusId: form.statusId,
       assuntoIds: form.assuntoIds,
@@ -499,6 +502,22 @@ export default function AgendamentoModal({
                   );
                 })}
               </div>
+            </div>
+
+            {/* Alerta */}
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Alerta (min antes) <span className="font-normal text-gray-400">(padrão do atendente se vazio)</span>
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                placeholder="ex: 30"
+                value={form.alertaMinutos}
+                onChange={(e) => setForm({ ...form, alertaMinutos: e.target.value })}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300"
+              />
             </div>
 
             {/* Link Umbler */}

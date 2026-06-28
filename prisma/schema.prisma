@@ -19,6 +19,7 @@ model Atendente{
   nome String
   ativo Boolean @default(true)
   email String? @unique
+  alertaMinutos Int? @default(30)
   createdAt DateTime @default(now())
   agendamentos Agendamento[]
 }
@@ -29,6 +30,7 @@ model Agendamento{
   cliente String
   linkUmbler String?
   observacoes String?
+  alertaMinutos Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -42,7 +42,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const { dataHoraInicio, dataHoraFim, cliente, linkUmbler, observacoes, atendenteId, statusId, assuntoIds } =
+  const { dataHoraInicio, dataHoraFim, cliente, linkUmbler, observacoes, alertaMinutos, atendenteId, statusId, assuntoIds } =
     await request.json();
 
   const agendamento = await prisma.agendamento.create({
@@ -52,6 +52,7 @@ export async function POST(request) {
       cliente,
       linkUmbler: linkUmbler || null,
       observacoes: observacoes || null,
+      alertaMinutos: alertaMinutos ?? null,
       atendenteId,
       statusId,
       assuntos: { connect: assuntoIds.map((id) => ({ id })) },

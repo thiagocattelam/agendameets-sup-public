@@ -10,7 +10,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const { nome, ativo, email } = await request.json();
+  const { nome, ativo, email, alertaMinutos } = await request.json();
 
   if (!nome?.trim()) {
     return Response.json({ error: "O nome é obrigatório." }, { status: 400 });
@@ -19,7 +19,7 @@ export async function POST(request) {
     return Response.json({ error: "O e-mail é obrigatório." }, { status: 400 });
   }
   const atendente = await prisma.atendente.create({
-    data: { nome, ativo, email },
+    data: { nome, ativo, email, alertaMinutos: alertaMinutos ?? 30 },
   });
   return Response.json(atendente);
 }

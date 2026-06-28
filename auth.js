@@ -11,9 +11,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return profile?.email?.endsWith("@clinicaexperts.com.br") ?? false;
     },
     async jwt({ token, profile }) {
-      if (profile?.email) {
+      const email = profile?.email ?? token.email;
+      if (email && (profile?.email || token.atendenteId === null || token.atendenteId === undefined)) {
         const atendente = await prisma.atendente.findUnique({
-          where: { email: profile.email },
+          where: { email },
           select: { id: true },
         });
         token.atendenteId = atendente?.id ?? null;

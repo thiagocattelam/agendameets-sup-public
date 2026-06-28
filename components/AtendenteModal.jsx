@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }) {
-  const [form, setForm] = useState({ nome: "", email: "", ativo: true });
+  const [form, setForm] = useState({ nome: "", email: "", ativo: true, alertaMinutos: 30 });
 
   useEffect(() => {
     if (aberto) {
@@ -16,14 +16,14 @@ export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }
 
   useEffect(() => {
     if (atendente) {
-      setForm({ nome: atendente.nome, email: atendente.email ?? "", ativo: atendente.ativo });
+      setForm({ nome: atendente.nome, email: atendente.email ?? "", ativo: atendente.ativo, alertaMinutos: atendente.alertaMinutos ?? 30 });
     } else {
-      setForm({ nome: "", email: "", ativo: true });
+      setForm({ nome: "", email: "", ativo: true, alertaMinutos: 30 });
     }
   }, [atendente]);
 
   function fechar() {
-    setForm({ nome: "", email: "", ativo: true });
+    setForm({ nome: "", email: "", ativo: true, alertaMinutos: 30 });
     onFechar();
   }
 
@@ -34,7 +34,7 @@ export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }
     await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, email: form.email || null }),
+      body: JSON.stringify({ ...form, email: form.email || null, alertaMinutos: form.alertaMinutos }),
     });
     onSalvar();
     fechar();
@@ -74,6 +74,18 @@ export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required={!atendente}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Alerta padrão (minutos antes)</label>
+            <input
+              type="number"
+              min={1}
+              max={1440}
+              placeholder="30"
+              className="border rounded-lg w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+              value={form.alertaMinutos}
+              onChange={(e) => setForm({ ...form, alertaMinutos: Number(e.target.value) || 30 })}
             />
           </div>
           <div className="flex justify-end">
