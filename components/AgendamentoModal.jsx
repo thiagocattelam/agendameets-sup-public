@@ -42,33 +42,97 @@ const emptyForm = {
   assuntoIds: [],
 };
 
-const TimeInput = forwardRef(({ onClick, isOpen, displayValue, hasError }, ref) => (
-  <button
-    type="button"
-    onClick={onClick}
-    ref={ref}
-    className={`flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm w-full text-left focus:outline-none transition-colors ${
-      isOpen ? "border-purple-400 ring-2 ring-purple-200" : hasError ? "border-red-400 ring-2 ring-red-100" : "border-gray-200"
-    } ${displayValue ? "text-gray-700" : "text-gray-400"}`}
-  >
-    <span>{displayValue || "--:--"}</span>
-    <Clock size={14} className="text-gray-400 flex-shrink-0" />
-  </button>
-));
+const TimeInput = forwardRef(({ onClick, isOpen, hasError, displayValue, onTimeChange }, ref) => {
+  const [inputVal, setInputVal] = useState(displayValue || "");
 
-const DateInput = forwardRef(({ onClick, isOpen, displayValue, hasError }, ref) => (
-  <button
-    type="button"
-    onClick={onClick}
-    ref={ref}
-    className={`flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm w-full text-left focus:outline-none transition-colors ${
-      isOpen ? "border-purple-400 ring-2 ring-purple-200" : hasError ? "border-red-400 ring-2 ring-red-100" : "border-gray-200"
-    } ${displayValue ? "text-gray-700" : "text-gray-400"}`}
-  >
-    <span>{displayValue || "dd/mm/aaaa"}</span>
-    <CalendarDays size={14} className="text-gray-400 flex-shrink-0" />
-  </button>
-));
+  useEffect(() => {
+    setInputVal(displayValue || "");
+  }, [displayValue]);
+
+  function handleChange(e) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+    if (digits.length >= 2 && Number(digits.slice(0, 2)) > 23) return;
+    if (digits.length === 4 && Number(digits.slice(2, 4)) > 59) return;
+    const formatted = digits.length >= 3 ? digits.slice(0, 2) + ":" + digits.slice(2) : digits;
+    setInputVal(formatted);
+    if (digits.length === 4) onTimeChange(formatted);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Backspace" && inputVal.length === 3 && inputVal[2] === ":") {
+      e.preventDefault();
+      setInputVal(inputVal.slice(0, 1));
+    }
+  }
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 border rounded-lg px-3 py-2 transition-colors ${
+        isOpen ? "border-purple-400 ring-2 ring-purple-200"
+               : hasError ? "border-red-400 ring-2 ring-red-100"
+               : "border-gray-200"
+      }`}
+    >
+      <input
+        ref={ref}
+        value={inputVal}
+        onChange={handleChange}
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
+        placeholder="--:--"
+        maxLength={5}
+        className="text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent w-10"
+      />
+      <Clock size={14} className="text-gray-400 flex-shrink-0 cursor-pointer" onClick={onClick} />
+    </div>
+  );
+});
+
+const DateInput = forwardRef(({ onClick, isOpen, hasError, displayValue, onDateChange }, ref) => {
+  const [inputVal, setInputVal] = useState(displayValue || "");
+
+  useEffect(() => {
+    setInputVal(displayValue || "");
+  }, [displayValue]);
+
+  function handleChange(e) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
+    let formatted = digits;
+    if (digits.length >= 5) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    } else if (digits.length >= 3) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    setInputVal(formatted);
+    if (digits.length === 8) {
+      const d = new Date(`${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}T12:00:00`);
+      if (!isNaN(d.getTime())) onDateChange(`${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}`);
+    } else if (digits.length === 0) {
+      onDateChange("");
+    }
+  }
+
+  return (
+    <div
+      className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
+        isOpen ? "border-purple-400 ring-2 ring-purple-200"
+               : hasError ? "border-red-400 ring-2 ring-red-100"
+               : "border-gray-200"
+      }`}
+    >
+      <input
+        ref={ref}
+        value={inputVal}
+        onChange={handleChange}
+        onClick={onClick}
+        placeholder="dd/mm/aaaa"
+        maxLength={10}
+        className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent min-w-0"
+      />
+      <CalendarDays size={14} className="text-gray-400 flex-shrink-0 cursor-pointer" onClick={onClick} />
+    </div>
+  );
+});
 
 export default function AgendamentoModal({
   aberto,
@@ -213,8 +277,9 @@ export default function AgendamentoModal({
                   customInput={
                     <DateInput
                       isOpen={dataPickerAberto}
-                      displayValue={form.data ? new Date(form.data + "T12:00:00").toLocaleDateString("pt-BR") : ""}
                       hasError={tentouSalvar && !form.data}
+                      displayValue={form.data ? new Date(form.data + "T12:00:00").toLocaleDateString("pt-BR") : ""}
+                      onDateChange={(dateStr) => setForm((f) => ({ ...f, data: dateStr }))}
                     />
                   }
                 />
@@ -242,7 +307,12 @@ export default function AgendamentoModal({
                   popperProps={{ strategy: "fixed" }}
                   popperPlacement="bottom-start"
                   customInput={
-                    <TimeInput isOpen={horaInicioAberto} displayValue={form.horaInicio} hasError={tentouSalvar && !form.horaInicio} />
+                    <TimeInput
+                      isOpen={horaInicioAberto}
+                      hasError={tentouSalvar && !form.horaInicio}
+                      displayValue={form.horaInicio}
+                      onTimeChange={(val) => setForm((f) => ({ ...f, horaInicio: val }))}
+                    />
                   }
                 />
               </div>
@@ -269,7 +339,12 @@ export default function AgendamentoModal({
                   popperProps={{ strategy: "fixed" }}
                   popperPlacement="bottom-start"
                   customInput={
-                    <TimeInput isOpen={horaFimAberto} displayValue={form.horaFim} hasError={tentouSalvar && !form.horaFim} />
+                    <TimeInput
+                      isOpen={horaFimAberto}
+                      hasError={tentouSalvar && !form.horaFim}
+                      displayValue={form.horaFim}
+                      onTimeChange={(val) => setForm((f) => ({ ...f, horaFim: val }))}
+                    />
                   }
                 />
               </div>
