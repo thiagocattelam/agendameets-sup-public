@@ -6,6 +6,15 @@ export default function AtendenteModal({ aberto, onFechar, atendente, onSalvar }
   const [form, setForm] = useState({ nome: "", email: "", ativo: true });
 
   useEffect(() => {
+    if (aberto) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [aberto]);
+
+  useEffect(() => {
     if (atendente) {
       setForm({ nome: atendente.nome, email: atendente.email ?? "", ativo: atendente.ativo });
     } else {

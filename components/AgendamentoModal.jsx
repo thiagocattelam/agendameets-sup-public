@@ -170,6 +170,15 @@ export default function AgendamentoModal({
   }, [atendenteDropdownAberto, statusDropdownAberto]);
 
   useEffect(() => {
+    if (aberto) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [aberto]);
+
+  useEffect(() => {
     if (agendamento) {
       setForm({
         data: toLocalDate(agendamento.dataHoraInicio),

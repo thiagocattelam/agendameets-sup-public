@@ -6,6 +6,15 @@ export default function AssuntoModal({ aberto, onFechar, assunto, onSalvar }) {
   const [form, setForm] = useState({ descricao: "" });
 
   useEffect(() => {
+    if (aberto) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [aberto]);
+
+  useEffect(() => {
     if (assunto) {
       setForm({ descricao: assunto.descricao });
     } else {
