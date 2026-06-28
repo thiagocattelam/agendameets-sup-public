@@ -1,7 +1,39 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { ExternalLink, X } from "lucide-react";
+import { useState, useEffect, useRef, forwardRef } from "react";
+import { ExternalLink, X, CalendarDays, ChevronDown } from "lucide-react";
 import AgendamentoModal from "../../../components/AgendamentoModal";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { ptBR } from "date-fns/locale/pt-BR";
+
+registerLocale("pt-BR", ptBR);
+
+function formatDateDisplay(dateStr) {
+  if (!dateStr) return "—";
+  return new Date(dateStr + "T12:00:00").toLocaleDateString("pt-BR");
+}
+
+const DateRangeInput = forwardRef(
+  ({ dataInicio, dataFim, onToggle, externalRef, isOpen }, ref) => {
+    const mergedRef = (el) => {
+      if (typeof ref === "function") ref(el);
+      else if (ref) ref.current = el;
+      if (externalRef) externalRef.current = el;
+    };
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        ref={mergedRef}
+        className={`flex items-center gap-2 text-sm text-gray-700 bg-gray-50 border rounded-full px-4 py-1.5 focus:outline-none cursor-pointer whitespace-nowrap min-w-[190px] transition-colors ${isOpen ? "border-purple-400 ring-2 ring-purple-200" : "border-gray-200"}`}
+      >
+        <span>{formatDateDisplay(dataInicio)}</span>
+        <span className="text-gray-300">–</span>
+        <span>{formatDateDisplay(dataFim)}</span>
+        <CalendarDays size={14} className="text-gray-400 ml-1" />
+      </button>
+    );
+  },
+);
 
 function getMondayOf(date) {
   const d = new Date(date);
@@ -37,8 +69,12 @@ function formatDataCabecalho(dateStr) {
 }
 
 export default function AgendamentosPage() {
-  const [dataInicio, setDataInicio] = useState(getMondayOf(new Date()));
-  const [dataFim, setDataFim] = useState(addDays(getMondayOf(new Date()), 6));
+  const [dateRange, setDateRange] = useState([
+    new Date(getMondayOf(new Date()) + "T12:00:00"),
+    new Date(addDays(getMondayOf(new Date()), 6) + "T12:00:00"),
+  ]);
+  const dataInicio = dateRange[0]?.toISOString().slice(0, 10) ?? null;
+  const dataFim = dateRange[1]?.toISOString().slice(0, 10) ?? null;
   const [atendenteId, setAtendenteId] = useState("");
 
   const [agendamentos, setAgendamentos] = useState([]);
@@ -46,12 +82,17 @@ export default function AgendamentosPage() {
   const [statusList, setStatusList] = useState([]);
   const [assuntosList, setAssuntosList] = useState([]);
 
+  const [calendarAberto, setCalendarAberto] = useState(false);
+
   const [modalAberto, setModalAberto] = useState(false);
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
   const [modalDeleteAberto, setModalDeleteAberto] = useState(false);
   const [agendamentoDeletar, setAgendamentoDeletar] = useState(null);
   const [menuAberto, setMenuAberto] = useState(null);
   const menuRef = useRef(null);
+  const dateButtonRef = useRef(null);
+  const atendenteDropdownRef = useRef(null);
+  const [atendenteDropdownAberto, setAtendenteDropdownAberto] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -74,17 +115,23 @@ export default function AgendamentosPage() {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuAberto(null);
       }
+      if (atendenteDropdownRef.current && !atendenteDropdownRef.current.contains(e.target)) {
+        setAtendenteDropdownAberto(false);
+      }
     }
     document.addEventListener("mousedown", handleClickFora);
     return () => document.removeEventListener("mousedown", handleClickFora);
   }, []);
 
   function carregarAgendamentos() {
+    if (!dataInicio || !dataFim) return;
     const inicio = new Date(dataInicio + "T00:00:00").toISOString();
     const fim = new Date(dataFim + "T23:59:59").toISOString();
     const params = new URLSearchParams({ inicio, fim });
     if (atendenteId) params.set("atendenteId", atendenteId);
-    fetch(`/api/agendamentos?${params}`).then((r) => r.json()).then(setAgendamentos);
+    fetch(`/api/agendamentos?${params}`)
+      .then((r) => r.json())
+      .then(setAgendamentos);
   }
 
   function handleAdicionar() {
@@ -105,7 +152,9 @@ export default function AgendamentosPage() {
   }
 
   async function handleExcluir() {
-    await fetch(`/api/agendamentos/${agendamentoDeletar.id}`, { method: "DELETE" });
+    await fetch(`/api/agendamentos/${agendamentoDeletar.id}`, {
+      method: "DELETE",
+    });
     setModalDeleteAberto(false);
     setAgendamentoDeletar(null);
     carregarAgendamentos();
@@ -126,19 +175,35 @@ export default function AgendamentosPage() {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Agendamentos</h2>
-          <p className="text-sm text-gray-400 mt-0.5">{agendamentos.length} registros</p>
+          <p className="text-sm text-gray-400 mt-0.5">
+            {agendamentos.length} registros
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <select
-            value={atendenteId}
-            onChange={(e) => setAtendenteId(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
-          >
-            <option value="">Todos os atendentes</option>
-            {atendentes.map((a) => (
-              <option key={a.id} value={a.id}>{a.nome}</option>
-            ))}
-          </select>
+          <div className="relative" ref={atendenteDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setAtendenteDropdownAberto((v) => !v)}
+              className={`flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none transition-colors whitespace-nowrap w-48 ${atendenteDropdownAberto ? "border-purple-400 ring-2 ring-purple-200" : "border-gray-200 hover:border-gray-300"}`}
+            >
+              <span className="truncate">{atendenteId ? atendentes.find((a) => String(a.id) === String(atendenteId))?.nome : "Todos os atendentes"}</span>
+              <ChevronDown size={14} className={`text-gray-400 transition-transform ${atendenteDropdownAberto ? "rotate-180" : ""}`} />
+            </button>
+            {atendenteDropdownAberto && (
+              <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-full overflow-hidden">
+                {[{ id: "", nome: "Todos os atendentes" }, ...atendentes.filter((a) => a.ativo)].map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => { setAtendenteId(a.id); setAtendenteDropdownAberto(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${String(atendenteId) === String(a.id) ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
+                  >
+                    {a.nome}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={handleAdicionar}
             className="text-white px-4 py-2 rounded-xl text-sm font-medium transition hover:opacity-90 whitespace-nowrap"
@@ -150,50 +215,83 @@ export default function AgendamentosPage() {
       </div>
 
       {/* Filtro de datas */}
-      <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-400 font-medium">De</label>
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={(e) => setDataInicio(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
+      <div className="bg-white border border-gray-200 rounded-2xl px-5 py-3 shadow-sm mb-6 flex flex-wrap items-center gap-3">
+        <DatePicker
+          selectsRange
+          startDate={dateRange[0]}
+          endDate={dateRange[1] ?? undefined}
+          onChange={(range) => {
+            setDateRange(range);
+            if (range[0] && range[1]) setCalendarAberto(false);
+          }}
+          open={calendarAberto}
+          onClickOutside={(e) => {
+            if (dateButtonRef.current?.contains(e.target)) return;
+            setCalendarAberto(false);
+          }}
+          portalId="datepicker-portal"
+          dateFormat="dd/MM/yyyy"
+          locale="pt-BR"
+          customInput={
+            <DateRangeInput
+              dataInicio={dataInicio}
+              dataFim={dataFim}
+              onToggle={() => setCalendarAberto((v) => !v)}
+              externalRef={dateButtonRef}
+              isOpen={calendarAberto}
             />
-          </div>
-          <span className="text-gray-300 mt-4">–</span>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-400 font-medium">Até</label>
-            <input
-              type="date"
-              value={dataFim}
-              onChange={(e) => setDataFim(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-2 sm:mt-4">
+          }
+        />
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => { const d = hoje(); setDataInicio(d); setDataFim(d); }}
-            className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+            onClick={() => {
+              const d = new Date(hoje() + "T12:00:00");
+              setDateRange([d, d]);
+            }}
+            className="px-4 py-1.5 text-xs rounded-full bg-purple-50 text-purple-600 font-medium hover:bg-purple-100 transition"
           >
             Hoje
           </button>
           <button
-            onClick={() => { const seg = getMondayOf(new Date()); setDataInicio(seg); setDataFim(addDays(seg, 6)); }}
-            className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+            onClick={() => {
+              const seg = getMondayOf(new Date());
+              setDateRange([
+                new Date(seg + "T12:00:00"),
+                new Date(addDays(seg, 6) + "T12:00:00"),
+              ]);
+            }}
+            className="px-4 py-1.5 text-xs rounded-full bg-purple-50 text-purple-600 font-medium hover:bg-purple-100 transition"
           >
             Esta semana
           </button>
           <button
-            onClick={() => { setDataInicio((s) => addDays(s, -7)); setDataFim((s) => addDays(s, -7)); }}
-            className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+            onClick={() =>
+              setDateRange(([s, e]) => [
+                new Date(
+                  addDays(s.toISOString().slice(0, 10), -7) + "T12:00:00",
+                ),
+                new Date(
+                  addDays((e ?? s).toISOString().slice(0, 10), -7) +
+                    "T12:00:00",
+                ),
+              ])
+            }
+            className="px-4 py-1.5 text-xs rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
           >
             ← Anterior
           </button>
           <button
-            onClick={() => { setDataInicio((s) => addDays(s, 7)); setDataFim((s) => addDays(s, 7)); }}
-            className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+            onClick={() =>
+              setDateRange(([s, e]) => [
+                new Date(
+                  addDays(s.toISOString().slice(0, 10), 7) + "T12:00:00",
+                ),
+                new Date(
+                  addDays((e ?? s).toISOString().slice(0, 10), 7) + "T12:00:00",
+                ),
+              ])
+            }
+            className="px-4 py-1.5 text-xs rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
           >
             Próxima →
           </button>
@@ -227,22 +325,29 @@ export default function AgendamentosPage() {
                       {/* Linha superior: horário + status + menu */}
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm font-mono text-gray-400">
-                          {formatHora(ag.dataHoraInicio)} – {formatHora(ag.dataHoraFim)}
+                          {formatHora(ag.dataHoraInicio)} –{" "}
+                          {formatHora(ag.dataHoraFim)}
                         </span>
                         <div className="flex items-center gap-2">
                           {ag.status && (
                             <span
-                              className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
                               style={{
                                 backgroundColor: ag.status.corHex + "22",
                                 color: ag.status.corHex,
                               }}
                             >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: ag.status.corHex }}
+                              />
                               {ag.status.descricao}
                             </span>
                           )}
                           <button
-                            onClick={() => setMenuAberto(menuAberto === ag.id ? null : ag.id)}
+                            onClick={() =>
+                              setMenuAberto(menuAberto === ag.id ? null : ag.id)
+                            }
                             className="text-gray-400 hover:text-gray-700 p-1 rounded transition-colors font-bold text-lg leading-none"
                           >
                             ⋮
@@ -251,7 +356,9 @@ export default function AgendamentosPage() {
                       </div>
 
                       {/* Cliente */}
-                      <p className="text-base font-semibold text-gray-800">{ag.cliente}</p>
+                      <p className="text-base font-semibold text-gray-800">
+                        {ag.cliente}
+                      </p>
 
                       {/* Atendente + assuntos */}
                       <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
@@ -259,7 +366,9 @@ export default function AgendamentosPage() {
                         {ag.assuntos.length > 0 && (
                           <>
                             <span className="text-gray-300">·</span>
-                            <span>{ag.assuntos.map((a) => a.descricao).join(", ")}</span>
+                            <span>
+                              {ag.assuntos.map((a) => a.descricao).join(", ")}
+                            </span>
                           </>
                         )}
                       </div>
@@ -331,10 +440,15 @@ export default function AgendamentosPage() {
               <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
                 <span className="text-red-500 text-xl font-bold">!</span>
               </div>
-              <h2 className="text-lg font-bold text-gray-900 mb-2">Deseja excluir o Agendamento?</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-2">
+                Deseja excluir o Agendamento?
+              </h2>
               <p className="text-sm text-gray-500">
                 Você deseja mesmo excluir o agendamento de{" "}
-                <strong className="text-gray-700">{agendamentoDeletar?.cliente}</strong>?
+                <strong className="text-gray-700">
+                  {agendamentoDeletar?.cliente}
+                </strong>
+                ?
               </p>
             </div>
             <div className="border-t border-gray-100 px-6 py-4 flex justify-end">
