@@ -18,6 +18,7 @@ model Atendente{
   id String @id @default(cuid())
   nome String
   ativo Boolean @default(true)
+  email String? @unique
   createdAt DateTime @default(now())
   agendamentos Agendamento[]
 }
