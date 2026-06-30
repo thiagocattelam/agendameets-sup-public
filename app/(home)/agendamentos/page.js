@@ -35,22 +35,34 @@ const DateRangeInput = forwardRef(
   },
 );
 
+function toDateKey(d) {
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
 function getMondayOf(date) {
   const d = new Date(date);
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
+  return toDateKey(d);
 }
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr + "T12:00:00");
   d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  return toDateKey(d);
 }
 
 function hoje() {
-  const d = new Date();
+  return toDateKey(new Date());
+}
+
+function toLocalDateKey(dateStr) {
+  const d = new Date(dateStr);
   return [
     d.getFullYear(),
     String(d.getMonth() + 1).padStart(2, "0"),
@@ -86,8 +98,8 @@ export default function AgendamentosPage() {
     new Date(getMondayOf(new Date()) + "T12:00:00"),
     new Date(addDays(getMondayOf(new Date()), 6) + "T12:00:00"),
   ]);
-  const dataInicio = dateRange[0]?.toISOString().slice(0, 10) ?? null;
-  const dataFim = dateRange[1]?.toISOString().slice(0, 10) ?? null;
+  const dataInicio = dateRange[0] ? toDateKey(dateRange[0]) : null;
+  const dataFim = dateRange[1] ? toDateKey(dateRange[1]) : null;
   const [atendenteId, setAtendenteId] = useState("");
 
   const [agendamentos, setAgendamentos] = useState([]);
@@ -191,7 +203,7 @@ export default function AgendamentosPage() {
 
   const agrupados = {};
   for (const ag of agendamentos) {
-    const key = ag.dataHoraInicio.slice(0, 10);
+    const key = toLocalDateKey(ag.dataHoraInicio);
     if (!agrupados[key])
       agrupados[key] = { label: formatDataCabecalho(key), items: [] };
     agrupados[key].items.push(ag);
@@ -334,8 +346,8 @@ export default function AgendamentosPage() {
             onClick={() => {
               const step = dataInicio === dataFim ? 1 : 7;
               setDateRange(([s, e]) => [
-                new Date(addDays(s.toISOString().slice(0, 10), -step) + "T12:00:00"),
-                new Date(addDays((e ?? s).toISOString().slice(0, 10), -step) + "T12:00:00"),
+                new Date(addDays(toDateKey(s), -step) + "T12:00:00"),
+                new Date(addDays(toDateKey(e ?? s), -step) + "T12:00:00"),
               ]);
             }}
             className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
@@ -346,8 +358,8 @@ export default function AgendamentosPage() {
             onClick={() => {
               const step = dataInicio === dataFim ? 1 : 7;
               setDateRange(([s, e]) => [
-                new Date(addDays(s.toISOString().slice(0, 10), step) + "T12:00:00"),
-                new Date(addDays((e ?? s).toISOString().slice(0, 10), step) + "T12:00:00"),
+                new Date(addDays(toDateKey(s), step) + "T12:00:00"),
+                new Date(addDays(toDateKey(e ?? s), step) + "T12:00:00"),
               ]);
             }}
             className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
