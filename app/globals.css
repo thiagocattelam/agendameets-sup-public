@@ -11,6 +11,7 @@
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   font-family: Barlow, sans-serif;
   overflow: hidden;
+  user-select: none;
 }
 .react-datepicker__header {
   background: #f9fafb;
