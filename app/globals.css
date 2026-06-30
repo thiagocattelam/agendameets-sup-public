@@ -70,6 +70,14 @@
   display: none;
 }
 
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @layer components {
   .menu-link {
     font-family: Barlow, Helvetica, Arial, sans-serif;

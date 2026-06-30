@@ -273,7 +273,7 @@ export default function AgendamentoModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh]">
         <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
             {agendamento ? "Editar Agendamento" : "Novo Agendamento"}
@@ -283,7 +283,7 @@ export default function AgendamentoModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1">
+        <form onSubmit={handleSubmit} className="flex flex-col overflow-y-auto flex-1 scrollbar-hide">
           <div className="px-6 py-5 flex flex-col gap-4">
 
             {/* Data e horários */}
