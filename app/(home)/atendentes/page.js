@@ -46,7 +46,12 @@ export default function AtendentesPage() {
     await fetch(`/api/atendentes/${atendente.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome: atendente.nome, ativo: novoAtivo }),
+      body: JSON.stringify({
+        nome: atendente.nome,
+        ativo: novoAtivo,
+        email: atendente.email,
+        alertaMinutos: atendente.alertaMinutos,
+      }),
     });
     setTimeout(() => {
       carregarAtendentes();
