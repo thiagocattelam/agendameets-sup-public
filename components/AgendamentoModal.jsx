@@ -44,7 +44,7 @@ const emptyForm = {
   assuntoIds: [],
 };
 
-const TimeInput = forwardRef(({ onClick, isOpen, hasError, displayValue, onTimeChange }, ref) => {
+const TimeInput = forwardRef(({ isOpen, hasError, displayValue, onTimeChange, onToggle }, ref) => {
   const [inputVal, setInputVal] = useState(displayValue || "");
 
   useEffect(() => {
@@ -79,18 +79,23 @@ const TimeInput = forwardRef(({ onClick, isOpen, hasError, displayValue, onTimeC
         ref={ref}
         value={inputVal}
         onChange={handleChange}
-        onClick={onClick}
+        onClick={onToggle}
         onKeyDown={handleKeyDown}
         placeholder="--:--"
         maxLength={5}
         className="text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent w-10"
       />
-      <Clock size={14} className="text-gray-400 flex-shrink-0 cursor-pointer" onClick={onClick} />
+      <Clock
+        size={14}
+        className="text-gray-400 flex-shrink-0 cursor-pointer select-none"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onToggle}
+      />
     </div>
   );
 });
 
-const DateInput = forwardRef(({ onClick, isOpen, hasError, displayValue, onDateChange }, ref) => {
+const DateInput = forwardRef(({ isOpen, hasError, displayValue, onDateChange, onToggle }, ref) => {
   const [inputVal, setInputVal] = useState(displayValue || "");
 
   useEffect(() => {
@@ -126,12 +131,17 @@ const DateInput = forwardRef(({ onClick, isOpen, hasError, displayValue, onDateC
         ref={ref}
         value={inputVal}
         onChange={handleChange}
-        onClick={onClick}
+        onClick={onToggle}
         placeholder="dd/mm/aaaa"
         maxLength={10}
         className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent min-w-0"
       />
-      <CalendarDays size={14} className="text-gray-400 flex-shrink-0 cursor-pointer" onClick={onClick} />
+      <CalendarDays
+        size={14}
+        className="text-gray-400 flex-shrink-0 cursor-pointer select-none"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onToggle}
+      />
     </div>
   );
 });
@@ -263,7 +273,7 @@ export default function AgendamentoModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col">
         <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
             {agendamento ? "Editar Agendamento" : "Novo Agendamento"}
@@ -273,7 +283,7 @@ export default function AgendamentoModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1">
           <div className="px-6 py-5 flex flex-col gap-4">
 
             {/* Data e horários */}
@@ -289,9 +299,10 @@ export default function AgendamentoModal({
                       const dd = String(date.getDate()).padStart(2, "0");
                       setForm((f) => ({ ...f, data: `${yyyy}-${mm}-${dd}` }));
                     }
+                    setDataPickerAberto(false);
                   }}
-                  onCalendarOpen={() => setDataPickerAberto(true)}
-                  onCalendarClose={() => setDataPickerAberto(false)}
+                  open={dataPickerAberto}
+                  onClickOutside={() => setDataPickerAberto(false)}
                   popperProps={{ strategy: "fixed" }}
                   popperPlacement="bottom-start"
                   dateFormat="dd/MM/yyyy"
@@ -329,6 +340,7 @@ export default function AgendamentoModal({
                       hasError={tentouSalvar && !form.data}
                       displayValue={form.data ? new Date(form.data + "T12:00:00").toLocaleDateString("pt-BR") : ""}
                       onDateChange={(dateStr) => setForm((f) => ({ ...f, data: dateStr }))}
+                      onToggle={() => setDataPickerAberto((v) => !v)}
                     />
                   }
                 />
@@ -343,6 +355,7 @@ export default function AgendamentoModal({
                       const m = String(date.getMinutes()).padStart(2, "0");
                       setForm((f) => ({ ...f, horaInicio: `${h}:${m}` }));
                     }
+                    setHoraInicioAberto(false);
                   }}
                   showTimeSelect
                   showTimeSelectOnly
@@ -351,8 +364,8 @@ export default function AgendamentoModal({
                   timeFormat="HH:mm"
                   dateFormat="HH:mm"
                   locale="pt-BR"
-                  onCalendarOpen={() => setHoraInicioAberto(true)}
-                  onCalendarClose={() => setHoraInicioAberto(false)}
+                  open={horaInicioAberto}
+                  onClickOutside={() => setHoraInicioAberto(false)}
                   popperProps={{ strategy: "fixed" }}
                   popperPlacement="bottom-start"
                   customInput={
@@ -361,6 +374,7 @@ export default function AgendamentoModal({
                       hasError={tentouSalvar && !form.horaInicio}
                       displayValue={form.horaInicio}
                       onTimeChange={(val) => setForm((f) => ({ ...f, horaInicio: val }))}
+                      onToggle={() => setHoraInicioAberto((v) => !v)}
                     />
                   }
                 />
@@ -375,6 +389,7 @@ export default function AgendamentoModal({
                       const m = String(date.getMinutes()).padStart(2, "0");
                       setForm((f) => ({ ...f, horaFim: `${h}:${m}` }));
                     }
+                    setHoraFimAberto(false);
                   }}
                   showTimeSelect
                   showTimeSelectOnly
@@ -383,8 +398,8 @@ export default function AgendamentoModal({
                   timeFormat="HH:mm"
                   dateFormat="HH:mm"
                   locale="pt-BR"
-                  onCalendarOpen={() => setHoraFimAberto(true)}
-                  onCalendarClose={() => setHoraFimAberto(false)}
+                  open={horaFimAberto}
+                  onClickOutside={() => setHoraFimAberto(false)}
                   popperProps={{ strategy: "fixed" }}
                   popperPlacement="bottom-start"
                   customInput={
@@ -393,6 +408,7 @@ export default function AgendamentoModal({
                       hasError={tentouSalvar && !form.horaFim}
                       displayValue={form.horaFim}
                       onTimeChange={(val) => setForm((f) => ({ ...f, horaFim: val }))}
+                      onToggle={() => setHoraFimAberto((v) => !v)}
                     />
                   }
                 />
