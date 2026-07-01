@@ -2,7 +2,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 
-function tocarAlarme() {
+export function tocarAlarme() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const sequencia = [

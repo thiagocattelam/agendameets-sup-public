@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { Bell, X } from "lucide-react";
+import { tocarAlarme } from "@/hooks/useAlertaAgendamentos";
 
 function formatarHora(isoString) {
   return new Date(isoString).toLocaleTimeString("pt-BR", {
@@ -19,9 +20,10 @@ function calcularMinutosRestantes(isoString) {
 export default function AlertaModal({ agendamento, onFechar }) {
   useEffect(() => {
     if (!agendamento) return;
-    const timer = setTimeout(onFechar, 30000);
-    return () => clearTimeout(timer);
-  }, [agendamento, onFechar]);
+    tocarAlarme();
+    const intervalo = setInterval(tocarAlarme, 8000);
+    return () => clearInterval(intervalo);
+  }, [agendamento]);
 
   if (!agendamento) return null;
 
@@ -68,20 +70,7 @@ export default function AlertaModal({ agendamento, onFechar }) {
           </button>
         </div>
 
-        <div className="h-1 bg-purple-100">
-          <div
-            className="h-1 bg-purple-500"
-            style={{ animation: "shrink 30s linear forwards" }}
-          />
-        </div>
       </div>
-
-      <style>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
     </div>
   );
 }
