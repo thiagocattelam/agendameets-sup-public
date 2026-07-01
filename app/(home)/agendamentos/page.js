@@ -101,6 +101,18 @@ export default function AgendamentosPage() {
   const dataInicio = dateRange[0] ? toDateKey(dateRange[0]) : null;
   const dataFim = dateRange[1] ? toDateKey(dateRange[1]) : null;
   const [atendenteId, setAtendenteId] = useState("");
+  const [filtroCarregado, setFiltroCarregado] = useState(false);
+
+  function handleSetAtendenteId(id) {
+    setAtendenteId(id);
+    localStorage.setItem("filtro_atendenteId", id);
+  }
+
+  useEffect(() => {
+    const saved = localStorage.getItem("filtro_atendenteId") ?? "";
+    setAtendenteId(saved);
+    setFiltroCarregado(true);
+  }, []);
 
   const [agendamentos, setAgendamentos] = useState([]);
   const [totalAgendamentos, setTotalAgendamentos] = useState(0);
@@ -136,9 +148,10 @@ export default function AgendamentosPage() {
   }, []);
 
   useEffect(() => {
+    if (!filtroCarregado) return;
     setPagina(1);
     carregarAgendamentos(1);
-  }, [dataInicio, dataFim, atendenteId]);
+  }, [dataInicio, dataFim, atendenteId, filtroCarregado]);
 
   useEffect(() => {
     function handleClickFora(e) {
@@ -227,7 +240,7 @@ export default function AgendamentosPage() {
               onClick={() => setAtendenteDropdownAberto((v) => !v)}
               className={`flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none transition-colors whitespace-nowrap w-48 ${atendenteDropdownAberto ? "border-purple-400 ring-2 ring-purple-200" : "border-gray-200 hover:border-gray-300"}`}
             >
-              <span className="truncate">{atendenteId ? atendentes.find((a) => String(a.id) === String(atendenteId))?.nome : "Todos os atendentes"}</span>
+              <span className="truncate">{atendentes.find((a) => String(a.id) === String(atendenteId))?.nome ?? "Todos os atendentes"}</span>
               <ChevronDown size={14} className={`text-gray-400 transition-transform ${atendenteDropdownAberto ? "rotate-180" : ""}`} />
             </button>
             {atendenteDropdownAberto && (
@@ -236,7 +249,7 @@ export default function AgendamentosPage() {
                   <button
                     key={a.id}
                     type="button"
-                    onClick={() => { setAtendenteId(a.id); setAtendenteDropdownAberto(false); }}
+                    onClick={() => { handleSetAtendenteId(a.id); setAtendenteDropdownAberto(false); }}
                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${String(atendenteId) === String(a.id) ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
                   >
                     {a.nome}
