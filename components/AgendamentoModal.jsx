@@ -1,6 +1,16 @@
 "use client";
 import { useState, useEffect, useRef, forwardRef } from "react";
-import { X, ChevronDown, CalendarDays, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { useSession } from "next-auth/react";
+import {
+  X,
+  ChevronDown,
+  CalendarDays,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 
@@ -44,107 +54,127 @@ const emptyForm = {
   assuntoIds: [],
 };
 
-const TimeInput = forwardRef(({ isOpen, hasError, displayValue, onTimeChange, onToggle }, ref) => {
-  const [inputVal, setInputVal] = useState(displayValue || "");
+const TimeInput = forwardRef(
+  ({ isOpen, hasError, displayValue, onTimeChange, onToggle }, ref) => {
+    const [inputVal, setInputVal] = useState(displayValue || "");
 
-  useEffect(() => {
-    setInputVal(displayValue || "");
-  }, [displayValue]);
+    useEffect(() => {
+      setInputVal(displayValue || "");
+    }, [displayValue]);
 
-  function handleChange(e) {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
-    if (digits.length >= 2 && Number(digits.slice(0, 2)) > 23) return;
-    if (digits.length === 4 && Number(digits.slice(2, 4)) > 59) return;
-    const formatted = digits.length >= 3 ? digits.slice(0, 2) + ":" + digits.slice(2) : digits;
-    setInputVal(formatted);
-    if (digits.length === 4) onTimeChange(formatted);
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === "Backspace" && inputVal.length === 3 && inputVal[2] === ":") {
-      e.preventDefault();
-      setInputVal(inputVal.slice(0, 1));
+    function handleChange(e) {
+      const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+      if (digits.length >= 2 && Number(digits.slice(0, 2)) > 23) return;
+      if (digits.length === 4 && Number(digits.slice(2, 4)) > 59) return;
+      const formatted =
+        digits.length >= 3
+          ? digits.slice(0, 2) + ":" + digits.slice(2)
+          : digits;
+      setInputVal(formatted);
+      if (digits.length === 4) onTimeChange(formatted);
     }
-  }
 
-  return (
-    <div
-      className={`inline-flex items-center gap-1.5 border rounded-lg px-3 py-2 transition-colors ${
-        isOpen ? "border-purple-400 ring-2 ring-purple-200"
-               : hasError ? "border-red-400 ring-2 ring-red-100"
-               : "border-gray-200"
-      }`}
-    >
-      <input
-        ref={ref}
-        value={inputVal}
-        onChange={handleChange}
-        onClick={onToggle}
-        onKeyDown={handleKeyDown}
-        placeholder="--:--"
-        maxLength={5}
-        className="text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent w-10"
-      />
-      <Clock
-        size={14}
-        className="text-gray-400 flex-shrink-0 cursor-pointer select-none"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={onToggle}
-      />
-    </div>
-  );
-});
-
-const DateInput = forwardRef(({ isOpen, hasError, displayValue, onDateChange, onToggle }, ref) => {
-  const [inputVal, setInputVal] = useState(displayValue || "");
-
-  useEffect(() => {
-    setInputVal(displayValue || "");
-  }, [displayValue]);
-
-  function handleChange(e) {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
-    let formatted = digits;
-    if (digits.length >= 5) {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-    } else if (digits.length >= 3) {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    function handleKeyDown(e) {
+      if (
+        e.key === "Backspace" &&
+        inputVal.length === 3 &&
+        inputVal[2] === ":"
+      ) {
+        e.preventDefault();
+        setInputVal(inputVal.slice(0, 1));
+      }
     }
-    setInputVal(formatted);
-    if (digits.length === 8) {
-      const d = new Date(`${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}T12:00:00`);
-      if (!isNaN(d.getTime())) onDateChange(`${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}`);
-    } else if (digits.length === 0) {
-      onDateChange("");
-    }
-  }
 
-  return (
-    <div
-      className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
-        isOpen ? "border-purple-400 ring-2 ring-purple-200"
-               : hasError ? "border-red-400 ring-2 ring-red-100"
-               : "border-gray-200"
-      }`}
-    >
-      <input
-        ref={ref}
-        value={inputVal}
-        onChange={handleChange}
-        onClick={onToggle}
-        placeholder="dd/mm/aaaa"
-        maxLength={10}
-        className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent min-w-0"
-      />
-      <CalendarDays
-        size={14}
-        className="text-gray-400 flex-shrink-0 cursor-pointer select-none"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={onToggle}
-      />
-    </div>
-  );
-});
+    return (
+      <div
+        className={`inline-flex items-center gap-1.5 border rounded-lg px-3 py-2 transition-colors ${
+          isOpen
+            ? "border-purple-400 ring-2 ring-purple-200"
+            : hasError
+              ? "border-red-400 ring-2 ring-red-100"
+              : "border-gray-200"
+        }`}
+      >
+        <input
+          ref={ref}
+          value={inputVal}
+          onChange={handleChange}
+          onClick={onToggle}
+          onKeyDown={handleKeyDown}
+          placeholder="--:--"
+          maxLength={5}
+          className="text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent w-10"
+        />
+        <Clock
+          size={14}
+          className="text-gray-400 flex-shrink-0 cursor-pointer select-none"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onToggle}
+        />
+      </div>
+    );
+  },
+);
+
+const DateInput = forwardRef(
+  ({ isOpen, hasError, displayValue, onDateChange, onToggle }, ref) => {
+    const [inputVal, setInputVal] = useState(displayValue || "");
+
+    useEffect(() => {
+      setInputVal(displayValue || "");
+    }, [displayValue]);
+
+    function handleChange(e) {
+      const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
+      let formatted = digits;
+      if (digits.length >= 5) {
+        formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+      } else if (digits.length >= 3) {
+        formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+      }
+      setInputVal(formatted);
+      if (digits.length === 8) {
+        const d = new Date(
+          `${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}T12:00:00`,
+        );
+        if (!isNaN(d.getTime()))
+          onDateChange(
+            `${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}`,
+          );
+      } else if (digits.length === 0) {
+        onDateChange("");
+      }
+    }
+
+    return (
+      <div
+        className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${
+          isOpen
+            ? "border-purple-400 ring-2 ring-purple-200"
+            : hasError
+              ? "border-red-400 ring-2 ring-red-100"
+              : "border-gray-200"
+        }`}
+      >
+        <input
+          ref={ref}
+          value={inputVal}
+          onChange={handleChange}
+          onClick={onToggle}
+          placeholder="dd/mm/aaaa"
+          maxLength={10}
+          className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent min-w-0"
+        />
+        <CalendarDays
+          size={14}
+          className="text-gray-400 flex-shrink-0 cursor-pointer select-none"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onToggle}
+        />
+      </div>
+    );
+  },
+);
 
 export default function AgendamentoModal({
   aberto,
@@ -155,6 +185,7 @@ export default function AgendamentoModal({
   statusList,
   assuntosList,
 }) {
+  const { data: session } = useSession();
   const [form, setForm] = useState(emptyForm);
 
   const [tentouSalvar, setTentouSalvar] = useState(false);
@@ -171,10 +202,16 @@ export default function AgendamentoModal({
   useEffect(() => {
     if (!atendenteDropdownAberto && !statusDropdownAberto) return;
     function handleClickFora(e) {
-      if (atendenteDropdownRef.current && !atendenteDropdownRef.current.contains(e.target)) {
+      if (
+        atendenteDropdownRef.current &&
+        !atendenteDropdownRef.current.contains(e.target)
+      ) {
         setAtendenteDropdownAberto(false);
       }
-      if (statusDropdownRef.current && !statusDropdownRef.current.contains(e.target)) {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(e.target)
+      ) {
         setStatusDropdownAberto(false);
       }
     }
@@ -200,15 +237,24 @@ export default function AgendamentoModal({
         cliente: agendamento.cliente,
         linkUmbler: agendamento.linkUmbler ?? "",
         observacoes: agendamento.observacoes ?? "",
-        alertaMinutos: agendamento.alertaMinutos != null ? String(agendamento.alertaMinutos) : "",
+        alertaMinutos:
+          agendamento.alertaMinutos != null
+            ? String(agendamento.alertaMinutos)
+            : "",
         atendenteId: agendamento.atendenteId,
         statusId: agendamento.statusId,
         assuntoIds: agendamento.assuntos.map((a) => a.id),
       });
     } else {
-      setForm(emptyForm);
+      setForm({
+        ...emptyForm,
+        atendenteId: session?.atendenteId ?? "",
+        statusId:
+          statusList?.find((s) => s.descricao.toLowerCase() === "confirmado")
+            ?.id ?? "",
+      });
     }
-  }, [agendamento, aberto]);
+  }, [agendamento, aberto, session, statusList]);
 
   function fechar() {
     setForm(emptyForm);
@@ -233,23 +279,35 @@ export default function AgendamentoModal({
   async function handleSubmit(e) {
     e.preventDefault();
     setTentouSalvar(true);
-    if (!form.data || !form.horaInicio || !form.horaFim || !form.atendenteId || !form.statusId) return;
+    if (
+      !form.data ||
+      !form.horaInicio ||
+      !form.horaFim ||
+      !form.atendenteId ||
+      !form.statusId
+    )
+      return;
     if (salvando) return;
     setSalvando(true);
     try {
       const body = {
-        dataHoraInicio: new Date(`${form.data}T${form.horaInicio}:00`).toISOString(),
+        dataHoraInicio: new Date(
+          `${form.data}T${form.horaInicio}:00`,
+        ).toISOString(),
         dataHoraFim: new Date(`${form.data}T${form.horaFim}:00`).toISOString(),
         cliente: form.cliente,
         linkUmbler: form.linkUmbler || null,
         observacoes: form.observacoes || null,
-        alertaMinutos: form.alertaMinutos !== "" ? Number(form.alertaMinutos) : null,
+        alertaMinutos:
+          form.alertaMinutos !== "" ? Number(form.alertaMinutos) : null,
         atendenteId: form.atendenteId,
         statusId: form.statusId,
         assuntoIds: form.assuntoIds,
       };
 
-      const url = agendamento ? `/api/agendamentos/${agendamento.id}` : "/api/agendamentos";
+      const url = agendamento
+        ? `/api/agendamentos/${agendamento.id}`
+        : "/api/agendamentos";
       const method = agendamento ? "PUT" : "POST";
 
       await fetch(url, {
@@ -266,8 +324,12 @@ export default function AgendamentoModal({
   }
 
   const dataDate = form.data ? new Date(form.data + "T12:00:00") : null;
-  const atendenteSelecionado = atendentes?.find((a) => String(a.id) === String(form.atendenteId));
-  const statusSelecionado = statusList?.find((s) => String(s.id) === String(form.statusId));
+  const atendenteSelecionado = atendentes?.find(
+    (a) => String(a.id) === String(form.atendenteId),
+  );
+  const statusSelecionado = statusList?.find(
+    (s) => String(s.id) === String(form.statusId),
+  );
 
   if (!aberto) return null;
 
@@ -278,18 +340,26 @@ export default function AgendamentoModal({
           <h2 className="text-lg font-semibold text-gray-900">
             {agendamento ? "Editar Agendamento" : "Novo Agendamento"}
           </h2>
-          <button type="button" onClick={fechar} className="text-gray-400 hover:text-gray-700 transition-colors">
+          <button
+            type="button"
+            onClick={fechar}
+            className="text-gray-400 hover:text-gray-700 transition-colors"
+          >
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col overflow-y-auto flex-1 scrollbar-hide">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col overflow-y-auto flex-1 scrollbar-hide"
+        >
           <div className="px-6 py-5 flex flex-col gap-4">
-
             {/* Data e horários */}
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Data</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Data
+                </label>
                 <DatePicker
                   selected={dataDate}
                   onChange={(date) => {
@@ -317,19 +387,38 @@ export default function AgendamentoModal({
                     nextMonthButtonDisabled,
                   }) => (
                     <div className="flex items-center justify-between px-2 gap-1">
-                      <button onClick={decreaseYear} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
+                      <button
+                        onClick={decreaseYear}
+                        type="button"
+                        className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition"
+                      >
                         <ChevronsLeft size={12} />
                       </button>
-                      <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30">
+                      <button
+                        onClick={decreaseMonth}
+                        disabled={prevMonthButtonDisabled}
+                        type="button"
+                        className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30"
+                      >
                         <ChevronLeft size={12} />
                       </button>
                       <span className="flex-1 text-center text-sm font-bold text-gray-700">
-                        {date.toLocaleDateString("pt-BR", { month: "long" })} {date.getFullYear()}
+                        {date.toLocaleDateString("pt-BR", { month: "long" })}{" "}
+                        {date.getFullYear()}
                       </span>
-                      <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30">
+                      <button
+                        onClick={increaseMonth}
+                        disabled={nextMonthButtonDisabled}
+                        type="button"
+                        className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30"
+                      >
                         <ChevronRight size={12} />
                       </button>
-                      <button onClick={increaseYear} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
+                      <button
+                        onClick={increaseYear}
+                        type="button"
+                        className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition"
+                      >
                         <ChevronsRight size={12} />
                       </button>
                     </div>
@@ -338,15 +427,25 @@ export default function AgendamentoModal({
                     <DateInput
                       isOpen={dataPickerAberto}
                       hasError={tentouSalvar && !form.data}
-                      displayValue={form.data ? new Date(form.data + "T12:00:00").toLocaleDateString("pt-BR") : ""}
-                      onDateChange={(dateStr) => setForm((f) => ({ ...f, data: dateStr }))}
+                      displayValue={
+                        form.data
+                          ? new Date(
+                              form.data + "T12:00:00",
+                            ).toLocaleDateString("pt-BR")
+                          : ""
+                      }
+                      onDateChange={(dateStr) =>
+                        setForm((f) => ({ ...f, data: dateStr }))
+                      }
                       onToggle={() => setDataPickerAberto((v) => !v)}
                     />
                   }
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Início</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Início
+                </label>
                 <DatePicker
                   selected={timeStringToDate(form.horaInicio)}
                   onChange={(date) => {
@@ -373,14 +472,18 @@ export default function AgendamentoModal({
                       isOpen={horaInicioAberto}
                       hasError={tentouSalvar && !form.horaInicio}
                       displayValue={form.horaInicio}
-                      onTimeChange={(val) => setForm((f) => ({ ...f, horaInicio: val }))}
+                      onTimeChange={(val) =>
+                        setForm((f) => ({ ...f, horaInicio: val }))
+                      }
                       onToggle={() => setHoraInicioAberto((v) => !v)}
                     />
                   }
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Fim</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Fim
+                </label>
                 <DatePicker
                   selected={timeStringToDate(form.horaFim)}
                   onChange={(date) => {
@@ -407,7 +510,9 @@ export default function AgendamentoModal({
                       isOpen={horaFimAberto}
                       hasError={tentouSalvar && !form.horaFim}
                       displayValue={form.horaFim}
-                      onTimeChange={(val) => setForm((f) => ({ ...f, horaFim: val }))}
+                      onTimeChange={(val) =>
+                        setForm((f) => ({ ...f, horaFim: val }))
+                      }
                       onToggle={() => setHoraFimAberto((v) => !v)}
                     />
                   }
@@ -417,7 +522,9 @@ export default function AgendamentoModal({
 
             {/* Cliente */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Cliente</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Cliente
+              </label>
               <input
                 type="text"
                 required
@@ -430,51 +537,78 @@ export default function AgendamentoModal({
             {/* Atendente e Status */}
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Atendente</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Atendente
+                </label>
                 <div className="relative" ref={atendenteDropdownRef}>
                   <button
                     type="button"
                     onClick={() => setAtendenteDropdownAberto((v) => !v)}
                     className={`flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm w-full bg-white focus:outline-none transition-colors ${
-                      atendenteDropdownAberto ? "border-purple-400 ring-2 ring-purple-200" : tentouSalvar && !form.atendenteId ? "border-red-400 ring-2 ring-red-100" : "border-gray-200 hover:border-gray-300"
+                      atendenteDropdownAberto
+                        ? "border-purple-400 ring-2 ring-purple-200"
+                        : tentouSalvar && !form.atendenteId
+                          ? "border-red-400 ring-2 ring-red-100"
+                          : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <span className={`truncate ${atendenteSelecionado ? "text-gray-700" : "text-gray-400"}`}>
+                    <span
+                      className={`truncate ${atendenteSelecionado ? "text-gray-700" : "text-gray-400"}`}
+                    >
                       {atendenteSelecionado?.nome ?? "Selecione..."}
                     </span>
-                    <ChevronDown size={14} className={`text-gray-400 flex-shrink-0 transition-transform ${atendenteDropdownAberto ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      size={14}
+                      className={`text-gray-400 flex-shrink-0 transition-transform ${atendenteDropdownAberto ? "rotate-180" : ""}`}
+                    />
                   </button>
                   {atendenteDropdownAberto && (
                     <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-full max-h-48 overflow-y-auto">
-                      {atendentes?.filter((a) => a.ativo).map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => { setForm({ ...form, atendenteId: a.id }); setAtendenteDropdownAberto(false); }}
-                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${String(form.atendenteId) === String(a.id) ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
-                        >
-                          {a.nome}
-                        </button>
-                      ))}
+                      {atendentes
+                        ?.filter((a) => a.ativo)
+                        .map((a) => (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, atendenteId: a.id });
+                              setAtendenteDropdownAberto(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${String(form.atendenteId) === String(a.id) ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
+                          >
+                            {a.nome}
+                          </button>
+                        ))}
                     </div>
                   )}
                 </div>
               </div>
 
               <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Status</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Status
+                </label>
                 <div className="relative" ref={statusDropdownRef}>
                   <button
                     type="button"
                     onClick={() => setStatusDropdownAberto((v) => !v)}
                     className={`flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm w-full bg-white focus:outline-none transition-colors ${
-                      statusDropdownAberto ? "border-purple-400 ring-2 ring-purple-200" : tentouSalvar && !form.statusId ? "border-red-400 ring-2 ring-red-100" : "border-gray-200 hover:border-gray-300"
+                      statusDropdownAberto
+                        ? "border-purple-400 ring-2 ring-purple-200"
+                        : tentouSalvar && !form.statusId
+                          ? "border-red-400 ring-2 ring-red-100"
+                          : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <span className={`truncate ${statusSelecionado ? "text-gray-700" : "text-gray-400"}`}>
+                    <span
+                      className={`truncate ${statusSelecionado ? "text-gray-700" : "text-gray-400"}`}
+                    >
                       {statusSelecionado?.descricao ?? "Selecione..."}
                     </span>
-                    <ChevronDown size={14} className={`text-gray-400 flex-shrink-0 transition-transform ${statusDropdownAberto ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      size={14}
+                      className={`text-gray-400 flex-shrink-0 transition-transform ${statusDropdownAberto ? "rotate-180" : ""}`}
+                    />
                   </button>
                   {statusDropdownAberto && (
                     <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-full overflow-hidden">
@@ -482,10 +616,16 @@ export default function AgendamentoModal({
                         <button
                           key={s.id}
                           type="button"
-                          onClick={() => { setForm({ ...form, statusId: s.id }); setStatusDropdownAberto(false); }}
+                          onClick={() => {
+                            setForm({ ...form, statusId: s.id });
+                            setStatusDropdownAberto(false);
+                          }}
                           className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2 ${String(form.statusId) === String(s.id) ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
                         >
-                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.corHex }} />
+                          <span
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: s.corHex }}
+                          />
                           {s.descricao}
                         </button>
                       ))}
@@ -497,12 +637,17 @@ export default function AgendamentoModal({
 
             {/* Assuntos */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-2 block">Assuntos</label>
+              <label className="text-xs font-medium text-gray-500 mb-2 block">
+                Assuntos
+              </label>
               <div className="border border-gray-200 rounded-lg p-3 flex flex-col gap-2.5 max-h-36 overflow-y-auto">
                 {assuntosList?.map((a) => {
                   const checked = form.assuntoIds.includes(a.id);
                   return (
-                    <label key={a.id} className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <label
+                      key={a.id}
+                      className="flex items-center gap-2.5 cursor-pointer select-none"
+                    >
                       <input
                         type="checkbox"
                         checked={checked}
@@ -511,16 +656,31 @@ export default function AgendamentoModal({
                       />
                       <div
                         className={`w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 border transition-colors ${
-                          checked ? "bg-purple-600 border-purple-600" : "bg-white border-gray-300"
+                          checked
+                            ? "bg-purple-600 border-purple-600"
+                            : "bg-white border-gray-300"
                         }`}
                       >
                         {checked && (
-                          <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-                            <path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <svg
+                            width="8"
+                            height="6"
+                            viewBox="0 0 8 6"
+                            fill="none"
+                          >
+                            <path
+                              d="M1 3L3 5L7 1"
+                              stroke="white"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
                           </svg>
                         )}
                       </div>
-                      <span className="text-sm text-gray-700">{a.descricao}</span>
+                      <span className="text-sm text-gray-700">
+                        {a.descricao}
+                      </span>
                     </label>
                   );
                 })}
@@ -530,26 +690,35 @@ export default function AgendamentoModal({
             {/* Alerta */}
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Alerta (min antes) <span className="font-normal text-gray-400">(padrão do atendente se vazio)</span>
+                Alerta (min antes){" "}
+                <span className="font-normal text-gray-400">
+                  (padrão do atendente se vazio)
+                </span>
               </label>
               <input
                 type="number"
                 min={1}
-                max={1440}
+                max={60}
                 placeholder="ex: 30"
                 value={form.alertaMinutos}
-                onChange={(e) => setForm({ ...form, alertaMinutos: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, alertaMinutos: e.target.value })
+                }
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300"
               />
             </div>
 
             {/* Link Umbler */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Link Umbler</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Link Umbler
+              </label>
               <input
                 type="url"
                 value={form.linkUmbler}
-                onChange={(e) => setForm({ ...form, linkUmbler: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, linkUmbler: e.target.value })
+                }
                 placeholder="https://..."
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300"
               />
@@ -558,11 +727,14 @@ export default function AgendamentoModal({
             {/* Observações */}
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Observações <span className="font-normal text-gray-400">(opcional)</span>
+                Observações{" "}
+                <span className="font-normal text-gray-400">(opcional)</span>
               </label>
               <textarea
                 value={form.observacoes}
-                onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, observacoes: e.target.value })
+                }
                 placeholder="Anotações sobre o agendamento..."
                 rows={3}
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
