@@ -401,7 +401,8 @@ export default function AgendamentosPage() {
                   {items.map((ag) => (
                     <div
                       key={ag.id}
-                      className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col gap-1.5 px-5 py-4 relative"
+                      onClick={() => handleEditar(ag)}
+                      className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col gap-1.5 px-5 py-4 relative cursor-pointer hover:shadow-md transition-shadow"
                       style={{
                         borderLeftWidth: "4px",
                         borderLeftColor: ag.status?.corHex ?? "#e5e7eb",
@@ -430,9 +431,10 @@ export default function AgendamentosPage() {
                             </span>
                           )}
                           <button
-                            onClick={() =>
-                              setMenuAberto(menuAberto === ag.id ? null : ag.id)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMenuAberto(menuAberto === ag.id ? null : ag.id);
+                            }}
                             className="text-gray-400 hover:text-gray-700 p-1 rounded transition-colors font-bold text-lg leading-none"
                           >
                             ⋮

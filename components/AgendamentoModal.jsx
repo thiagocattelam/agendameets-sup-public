@@ -187,6 +187,7 @@ export default function AgendamentoModal({
 }) {
   const { data: session } = useSession();
   const [form, setForm] = useState(emptyForm);
+  const formInicialRef = useRef(emptyForm);
 
   const [tentouSalvar, setTentouSalvar] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -195,6 +196,7 @@ export default function AgendamentoModal({
   const [horaFimAberto, setHoraFimAberto] = useState(false);
   const [atendenteDropdownAberto, setAtendenteDropdownAberto] = useState(false);
   const [statusDropdownAberto, setStatusDropdownAberto] = useState(false);
+  const [confirmarFechamento, setConfirmarFechamento] = useState(false);
 
   const atendenteDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
@@ -229,8 +231,9 @@ export default function AgendamentoModal({
   }, [aberto]);
 
   useEffect(() => {
+    let initialForm;
     if (agendamento) {
-      setForm({
+      initialForm = {
         data: toLocalDate(agendamento.dataHoraInicio),
         horaInicio: toLocalTime(agendamento.dataHoraInicio),
         horaFim: toLocalTime(agendamento.dataHoraFim),
@@ -244,17 +247,28 @@ export default function AgendamentoModal({
         atendenteId: agendamento.atendenteId,
         statusId: agendamento.statusId,
         assuntoIds: agendamento.assuntos.map((a) => a.id),
-      });
+      };
     } else {
-      setForm({
+      initialForm = {
         ...emptyForm,
         atendenteId: session?.atendenteId ?? "",
         statusId:
           statusList?.find((s) => s.descricao.toLowerCase() === "confirmado")
             ?.id ?? "",
-      });
+      };
     }
+    setForm(initialForm);
+    formInicialRef.current = initialForm;
   }, [agendamento, aberto, session, statusList]);
+
+  function pedirFechamento() {
+    const isDirty = JSON.stringify(form) !== JSON.stringify(formInicialRef.current);
+    if (isDirty) {
+      setConfirmarFechamento(true);
+    } else {
+      fechar();
+    }
+  }
 
   function fechar() {
     setForm(emptyForm);
@@ -264,6 +278,7 @@ export default function AgendamentoModal({
     setHoraFimAberto(false);
     setAtendenteDropdownAberto(false);
     setStatusDropdownAberto(false);
+    setConfirmarFechamento(false);
     onFechar();
   }
 
@@ -334,15 +349,48 @@ export default function AgendamentoModal({
   if (!aberto) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh]">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={pedirFechamento}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh] relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {confirmarFechamento && (
+          <div className="absolute inset-0 bg-white/95 rounded-2xl flex flex-col items-center justify-center z-30 p-8">
+            <p className="text-gray-900 font-semibold text-base text-center mb-1">
+              Descartar alterações?
+            </p>
+            <p className="text-gray-400 text-sm text-center mb-6">
+              As alterações feitas não serão salvas.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmarFechamento(false)}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Continuar editando
+              </button>
+              <button
+                type="button"
+                onClick={fechar}
+                className="px-4 py-2 rounded-xl text-sm text-white font-semibold transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#8b47ff" }}
+              >
+                Descartar
+              </button>
+            </div>
+          </div>
+        )}
         <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
             {agendamento ? "Editar Agendamento" : "Novo Agendamento"}
           </h2>
           <button
             type="button"
-            onClick={fechar}
+            onClick={pedirFechamento}
             className="text-gray-400 hover:text-gray-700 transition-colors"
           >
             <X size={18} />
@@ -695,17 +743,29 @@ export default function AgendamentoModal({
                   (padrão do atendente se vazio)
                 </span>
               </label>
-              <input
-                type="number"
-                min={1}
-                max={60}
-                placeholder="ex: 30"
-                value={form.alertaMinutos}
-                onChange={(e) =>
-                  setForm({ ...form, alertaMinutos: e.target.value })
-                }
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300"
-              />
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-400">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, alertaMinutos: String(Math.max(1, (Number(form.alertaMinutos) || 1) - 1)) })}
+                  className="px-3 py-2 text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-colors text-sm font-medium select-none"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  placeholder="ex: 30"
+                  value={form.alertaMinutos}
+                  onChange={(e) => setForm({ ...form, alertaMinutos: e.target.value })}
+                  className="flex-1 text-sm text-center text-gray-700 focus:outline-none bg-transparent py-2 min-w-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, alertaMinutos: String((Number(form.alertaMinutos) || 0) + 1) })}
+                  className="px-3 py-2 text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-colors text-sm font-medium select-none"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             {/* Link Umbler */}

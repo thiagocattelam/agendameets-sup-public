@@ -101,13 +101,29 @@ export default function AtendenteModal({
             <label className="text-sm font-medium">
               Alerta padrão (minutos antes)
             </label>
-            <input
-              type="number"
-              placeholder="30"
-              className="border rounded-lg w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-              value={form.alertaMinutos}
-              onChange={(e) => setForm({ ...form, alertaMinutos: e.target.value })}
-            />
+            <div className="flex items-center border border-gray-200 rounded-lg mt-1 overflow-hidden focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-400">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, alertaMinutos: String(Math.max(1, (Number(form.alertaMinutos) || 1) - 1)) })}
+                className="px-3 py-2 text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-colors text-sm font-medium select-none"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                placeholder="30"
+                className="flex-1 text-sm text-center text-gray-700 focus:outline-none bg-transparent py-2 min-w-0"
+                value={form.alertaMinutos}
+                onChange={(e) => setForm({ ...form, alertaMinutos: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, alertaMinutos: String((Number(form.alertaMinutos) || 0) + 1) })}
+                className="px-3 py-2 text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-colors text-sm font-medium select-none"
+              >
+                +
+              </button>
+            </div>
           </div>
           <div className="flex justify-end">
             <button
