@@ -491,13 +491,19 @@ export default function AgendamentosPage() {
                           className="absolute right-4 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-36 overflow-hidden"
                         >
                           <button
-                            onClick={() => handleEditar(ag)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditar(ag);
+                            }}
                             className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
                           >
                             Editar
                           </button>
                           <button
-                            onClick={() => handleConfirmarExcluir(ag)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleConfirmarExcluir(ag);
+                            }}
                             className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50"
                           >
                             Excluir
