@@ -63,6 +63,9 @@ export default function Header() {
   // Dados do usuário logado via NextAuth
   const { data: session } = useSession();
 
+  // Estado da conexão com o Google Agenda do atendente logado
+  const [googleConectado, setGoogleConectado] = useState(null);
+
   // Fecha a sidebar ao clicar fora dela
   useEffect(() => {
     if (!isOpen) return;
@@ -86,6 +89,35 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [popoverAberto]);
+
+  // Busca o status da conexão com o Google Agenda ao abrir o popover
+  useEffect(() => {
+    if (!popoverAberto || !session?.atendenteId) return;
+    fetch("/api/google-calendar/status")
+      .then((res) => res.json())
+      .then((data) => setGoogleConectado(data.conectado))
+      .catch(() => {});
+  }, [popoverAberto, session?.atendenteId]);
+
+  // Avisa se a tentativa de conexão falhou por ser uma conta Google diferente do login
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("googleCalendarErro") === "email_mismatch") {
+      alert("Conecte com a mesma conta Google usada no login para poder sincronizar sua agenda.");
+      params.delete("googleCalendarErro");
+      const query = params.toString();
+      window.history.replaceState(null, "", window.location.pathname + (query ? `?${query}` : ""));
+    }
+  }, []);
+
+  function conectarGoogleAgenda() {
+    window.location.href = "/api/google-calendar/connect";
+  }
+
+  async function desconectarGoogleAgenda() {
+    await fetch("/api/google-calendar/disconnect", { method: "POST" });
+    setGoogleConectado(false);
+  }
 
   return (
     <aside
@@ -171,7 +203,7 @@ export default function Header() {
                     position: "fixed",
                     bottom: rect ? window.innerHeight - rect.top + 8 : 80,
                     left: rect ? rect.left : 8,
-                    width: 220,
+                    width: 240,
                     zIndex: 50,
                   }}
                   className="bg-white border border-gray-200 rounded-lg shadow-lg p-3"
@@ -184,6 +216,31 @@ export default function Header() {
                   <p className="text-xs text-gray-500 mb-3">
                     {session.user.email}
                   </p>
+
+                  {session.atendenteId && (
+                    <>
+                      <hr className="mb-2" />
+                      <div className="mb-2">
+                        {googleConectado && (
+                          <span
+                            className="flex items-center gap-1.5 w-fit text-xs font-semibold px-2.5 py-1 rounded-full mb-1.5"
+                            style={{ backgroundColor: "#22c55e22", color: "#16a34a" }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: "#16a34a" }} />
+                            Google Agenda conectada
+                          </span>
+                        )}
+                        <button
+                          onClick={googleConectado ? desconectarGoogleAgenda : conectarGoogleAgenda}
+                          className="flex items-center gap-3 px-3 py-[8px] rounded-lg text-sm font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors duration-150 w-full"
+                        >
+                          <CalendarDays size={16} className="shrink-0" />
+                          {googleConectado ? "Desconectar" : "Conectar Google Agenda"}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
                   <hr className="mb-2" />
                   <button
                     onClick={() => signOut()}
