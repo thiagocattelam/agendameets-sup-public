@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { criarEvento } from "@/lib/googleCalendar";
 
 const prisma = new PrismaClient();
 
@@ -57,7 +58,13 @@ export async function POST(request) {
       statusId,
       assuntos: { connect: assuntoIds.map((id) => ({ id })) },
     },
+    include: { atendente: true },
   });
+
+  const googleEventId = await criarEvento(agendamento.atendente, agendamento);
+  if (googleEventId) {
+    await prisma.agendamento.update({ where: { id: agendamento.id }, data: { googleEventId } });
+  }
 
   return Response.json(agendamento, { status: 201 });
 }

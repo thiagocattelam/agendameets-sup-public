@@ -22,6 +22,11 @@ model Atendente{
   alertaMinutos Int? @default(30)
   createdAt DateTime @default(now())
   agendamentos Agendamento[]
+
+  googleAccessToken String?
+  googleRefreshToken String?
+  googleTokenExpiry DateTime?
+  googleCalendarConectado Boolean @default(false)
 }
 model Agendamento{
   id String @id @default(cuid())
@@ -31,6 +36,7 @@ model Agendamento{
   linkUmbler String?
   observacoes String?
   alertaMinutos Int?
+  googleEventId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

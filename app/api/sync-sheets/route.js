@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { getSheetData } from "@/lib/sheets";
+import { criarEvento } from "@/lib/googleCalendar";
 
 const prisma = new PrismaClient();
 
@@ -48,13 +49,19 @@ export async function POST() {
         ignorados++;
         continue;
       } else {
-        await prisma.agendamento.create({
+        const novoAgendamento = await prisma.agendamento.create({
           data: {
             dataHoraInicio, dataHoraFim, cliente, linkUmbler, observacoes: observacoes ?? null,
             atendenteId: atendente.id, statusId: status.id,
             assuntos: { connect: assuntosConnect },
           },
         });
+
+        const googleEventId = await criarEvento(atendente, novoAgendamento);
+        if (googleEventId) {
+          await prisma.agendamento.update({ where: { id: novoAgendamento.id }, data: { googleEventId } });
+        }
+
         criados++;
       }
     }
