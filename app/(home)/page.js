@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import Skeleton from "@/components/Skeleton";
 
 const ROXO = "#8b47ff";
 const ROXO_ATIVO = "#7a38e6";
@@ -81,6 +82,51 @@ function BarTooltip({ active, payload, sufixo }) {
   );
 }
 
+const ALTURAS_BARRAS_SKELETON = [40, 70, 55, 90, 60, 35, 80];
+
+function SkeletonBarChart() {
+  return (
+    <div className="h-[260px] flex items-end gap-3 px-2 pb-6">
+      {ALTURAS_BARRAS_SKELETON.map((h, i) => (
+        <Skeleton
+          key={i}
+          className="flex-1 rounded-t-md"
+          style={{ height: `${h}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SkeletonTableRows({ rows = 5 }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, i) => (
+        <tr key={i} className="border-t border-gray-100">
+          <td className="px-6 py-3">
+            <Skeleton className="h-4 w-24" />
+          </td>
+          <td className="px-6 py-3">
+            <Skeleton className="h-4 w-32" />
+          </td>
+          <td className="px-6 py-3">
+            <Skeleton className="h-4 w-20" />
+          </td>
+          <td className="px-6 py-3">
+            <Skeleton className="h-4 w-20" />
+          </td>
+          <td className="px-6 py-3">
+            <Skeleton className="h-4 w-24" />
+          </td>
+          <td className="px-6 py-3">
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
 export default function Home() {
   const [modo, setModo] = useState("dia");
   const [dataRef, setDataRef] = useState(() => new Date());
@@ -91,6 +137,8 @@ export default function Home() {
 
   const [agendamentosPeriodo, setAgendamentosPeriodo] = useState([]);
   const [agendamentosMes, setAgendamentosMes] = useState([]);
+  const [loadingPeriodo, setLoadingPeriodo] = useState(true);
+  const [loadingMes, setLoadingMes] = useState(true);
 
   useEffect(() => {
     const inicio = new Date(dataInicio + "T00:00:00").toISOString();
@@ -98,7 +146,10 @@ export default function Home() {
     const params = new URLSearchParams({ inicio, fim, pageSize: "500" });
     fetch(`/api/agendamentos?${params}`)
       .then((r) => r.json())
-      .then(({ data }) => setAgendamentosPeriodo(data));
+      .then(({ data }) => {
+        setAgendamentosPeriodo(data);
+        setLoadingPeriodo(false);
+      });
   }, [dataInicio, dataFim]);
 
   useEffect(() => {
@@ -114,7 +165,10 @@ export default function Home() {
     const params = new URLSearchParams({ inicio, fim, pageSize: "2000" });
     fetch(`/api/agendamentos?${params}`)
       .then((r) => r.json())
-      .then(({ data }) => setAgendamentosMes(data));
+      .then(({ data }) => {
+        setAgendamentosMes(data);
+        setLoadingMes(false);
+      });
   }, []);
 
   const porProfissional = useMemo(() => {
@@ -256,7 +310,9 @@ export default function Home() {
           <p className="text-sm text-gray-400 mb-4">
             {modo === "dia" ? "No dia selecionado" : "Na semana selecionada"}
           </p>
-          {porProfissional.length === 0 ? (
+          {loadingPeriodo ? (
+            <SkeletonBarChart />
+          ) : porProfissional.length === 0 ? (
             <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
               Sem agendamentos no período.
             </div>
@@ -302,7 +358,9 @@ export default function Home() {
           <p className="text-sm text-gray-400 mb-4">
             Média de agendamentos por dia da semana no mês
           </p>
-          {agendamentosMes.length === 0 ? (
+          {loadingMes ? (
+            <SkeletonBarChart />
+          ) : agendamentosMes.length === 0 ? (
             <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
               Sem agendamentos no mês.
             </div>
@@ -349,12 +407,18 @@ export default function Home() {
             Agendamentos
           </h3>
           <p className="text-sm text-gray-400">
-            {agendamentosOrdenados.length} registro
-            {agendamentosOrdenados.length !== 1 ? "s" : ""} ·{" "}
-            {formatPeriodoLabel(modo, dataInicio, dataFim)}
+            {loadingPeriodo ? (
+              <Skeleton className="h-4 w-40 inline-block align-middle" />
+            ) : (
+              <>
+                {agendamentosOrdenados.length} registro
+                {agendamentosOrdenados.length !== 1 ? "s" : ""} ·{" "}
+                {formatPeriodoLabel(modo, dataInicio, dataFim)}
+              </>
+            )}
           </p>
         </div>
-        {agendamentosOrdenados.length === 0 ? (
+        {!loadingPeriodo && agendamentosOrdenados.length === 0 ? (
           <div className="text-center py-16 text-gray-400 text-sm">
             Nenhum agendamento nesse período.
           </div>
@@ -376,7 +440,8 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {agendamentosOrdenados.map((ag) => (
+                {loadingPeriodo && <SkeletonTableRows />}
+                {!loadingPeriodo && agendamentosOrdenados.map((ag) => (
                   <tr
                     key={ag.id}
                     className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
