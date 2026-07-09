@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, forwardRef } from "react";
 import { ExternalLink, X, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, NotebookPen } from "lucide-react";
 import AgendamentoModal from "../../../components/AgendamentoModal";
+import Skeleton from "../../../components/Skeleton";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 
@@ -93,6 +94,36 @@ function formatDataCabecalho(dateStr) {
   });
 }
 
+function SkeletonAgendamentoCard() {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col gap-2.5 px-5 py-4">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+      </div>
+      <Skeleton className="h-4 w-40" />
+      <Skeleton className="h-3 w-56" />
+    </div>
+  );
+}
+
+function SkeletonAgendamentosList() {
+  return (
+    <div className="flex flex-col gap-8">
+      {[3, 2].map((qtd, i) => (
+        <div key={i}>
+          <Skeleton className="h-3 w-36 mb-3" />
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: qtd }).map((_, j) => (
+              <SkeletonAgendamentoCard key={j} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AgendamentosPage() {
   const [dateRange, setDateRange] = useState([
     new Date(getMondayOf(new Date()) + "T12:00:00"),
@@ -116,6 +147,7 @@ export default function AgendamentosPage() {
 
   const [agendamentos, setAgendamentos] = useState([]);
   const [totalAgendamentos, setTotalAgendamentos] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [atendentes, setAtendentes] = useState([]);
   const [statusList, setStatusList] = useState([]);
   const [assuntosList, setAssuntosList] = useState([]);
@@ -183,6 +215,7 @@ export default function AgendamentosPage() {
       .then(({ data, total }) => {
         setAgendamentos(data);
         setTotalAgendamentos(total);
+        setLoading(false);
       });
   }
 
@@ -230,7 +263,13 @@ export default function AgendamentosPage() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Agendamentos</h2>
           <p className="text-sm text-gray-400 mt-0.5">
-            {totalAgendamentos} registro{totalAgendamentos !== 1 ? "s" : ""}
+            {loading ? (
+              <Skeleton className="h-4 w-24 inline-block align-middle" />
+            ) : (
+              <>
+                {totalAgendamentos} registro{totalAgendamentos !== 1 ? "s" : ""}
+              </>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -384,7 +423,9 @@ export default function AgendamentosPage() {
 
       {/* Lista */}
       <div>
-      {dias.length === 0 ? (
+      {loading ? (
+        <SkeletonAgendamentosList />
+      ) : dias.length === 0 ? (
         <div className="text-center py-20 text-gray-400 text-sm">
           Nenhum agendamento nesse período.
         </div>

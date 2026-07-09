@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import AssuntoModal from '../../../components/AssuntoModal';
+import Skeleton from '../../../components/Skeleton';
 
 export default function AssuntosPage() {
   const [assuntos, setAssuntos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [assuntoSelecionado, setAssuntoSelecionado] = useState(null);
   const [modalDeleteAberto, setModalDeleteAberto] = useState(false);
@@ -17,6 +19,7 @@ export default function AssuntosPage() {
     const res = await fetch('/api/assuntos');
     const data = await res.json();
     setAssuntos(data);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -69,7 +72,11 @@ export default function AssuntosPage() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Assuntos</h2>
           <p className="text-sm text-gray-400 mt-0.5">
-            {assuntos.length} registros
+            {loading ? (
+              <Skeleton className="h-4 w-20 inline-block align-middle" />
+            ) : (
+              <>{assuntos.length} registros</>
+            )}
           </p>
         </div>
         <button
@@ -100,7 +107,18 @@ export default function AssuntosPage() {
             </tr>
           </thead>
           <tbody>
-            {assuntos
+            {loading && Array.from({ length: 5 }).map((_, i) => (
+              <tr key={i} className="border-b border-gray-100">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                </td>
+                <td className="px-6 py-4" />
+              </tr>
+            ))}
+            {!loading && assuntos
               .filter((a) => a.descricao.toLowerCase().includes(busca.toLowerCase()))
               .map((a) => (
                 <tr

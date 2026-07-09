@@ -259,7 +259,7 @@ export default function AgendamentoModal({
     }
     setForm(initialForm);
     formInicialRef.current = initialForm;
-  }, [agendamento, aberto, session, statusList]);
+  }, [agendamento, aberto, session?.atendenteId, statusList]);
 
   function pedirFechamento() {
     const isDirty = JSON.stringify(form) !== JSON.stringify(formInicialRef.current);

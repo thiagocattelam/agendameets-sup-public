@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { X, ChevronDown } from "lucide-react";
 import AtendenteModal from "../../../components/AtendenteModal";
+import Skeleton from "../../../components/Skeleton";
 
 export default function AtendentesPage() {
   const [atendentes, setAtendentes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [atendenteSelecionado, setAtendenteSelecionado] = useState(null);
   const [modalDeleteAberto, setModalDeleteAberto] = useState(false);
@@ -21,6 +23,7 @@ export default function AtendentesPage() {
     const res = await fetch("/api/atendentes");
     const data = await res.json();
     setAtendentes(data);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -93,9 +96,15 @@ export default function AtendentesPage() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Atendentes</h2>
           <p className="text-sm text-gray-400 mt-0.5">
-            {atendentes
-              .filter((a) => filtroAtivo === "ativos" ? a.ativo : filtroAtivo === "inativos" ? !a.ativo : true)
-              .filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase())).length} registros
+            {loading ? (
+              <Skeleton className="h-4 w-20 inline-block align-middle" />
+            ) : (
+              <>
+                {atendentes
+                  .filter((a) => filtroAtivo === "ativos" ? a.ativo : filtroAtivo === "inativos" ? !a.ativo : true)
+                  .filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase())).length} registros
+              </>
+            )}
           </p>
         </div>
         <button
@@ -159,7 +168,21 @@ export default function AtendentesPage() {
             </tr>
           </thead>
           <tbody>
-            {atendentes
+            {loading && Array.from({ length: 5 }).map((_, i) => (
+              <tr key={i} className="border-b border-gray-100">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <Skeleton className="h-5 w-9 rounded-full" />
+                </td>
+                <td className="px-6 py-4" />
+              </tr>
+            ))}
+            {!loading && atendentes
               .filter((a) => filtroAtivo === "ativos" ? a.ativo : filtroAtivo === "inativos" ? !a.ativo : true)
               .filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase()))
               .map((a) => (
