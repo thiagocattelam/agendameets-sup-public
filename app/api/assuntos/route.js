@@ -1,8 +1,12 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
+  const session = await auth();
+  if (!session?.atendenteId) {
+    return Response.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
   const assuntos = await prisma.assunto.findMany({
     orderBy: { descricao: "asc" },
   });
@@ -10,6 +14,11 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const session = await auth();
+  if (!session?.atendenteId) {
+    return Response.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
   const { descricao } = await request.json();
 
   if (!descricao?.trim()) {

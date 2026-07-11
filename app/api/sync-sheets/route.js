@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { getSheetData } from "@/lib/sheets";
 import { criarEvento } from "@/lib/googleCalendar";
-
-const prisma = new PrismaClient();
 
 function parseDataHora(dataStr, horaStr) {
   const [dia, mes] = dataStr.split("/");
@@ -17,6 +16,11 @@ async function findOrCreate(model, where, create) {
 }
 
 export async function POST() {
+  const session = await auth();
+  if (!session?.atendenteId) {
+    return Response.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
   try {
     const rows = await getSheetData("A7:J");
 

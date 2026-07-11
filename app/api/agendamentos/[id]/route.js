@@ -1,9 +1,13 @@
-import { PrismaClient } from "@prisma/client";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { criarEvento, atualizarEvento, apagarEvento } from "@/lib/googleCalendar";
 
-const prisma = new PrismaClient();
-
 export async function PUT(request, { params }) {
+  const session = await auth();
+  if (!session?.atendenteId) {
+    return Response.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
   const { id } = await params;
   const { dataHoraInicio, dataHoraFim, cliente, linkUmbler, observacoes, alertaMinutos, atendenteId, statusId, assuntoIds } =
     await request.json();
@@ -48,6 +52,11 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(_, { params }) {
+  const session = await auth();
+  if (!session?.atendenteId) {
+    return Response.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   const agendamento = await prisma.agendamento.findUnique({

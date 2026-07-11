@@ -1,9 +1,7 @@
 import { auth } from "@/auth";
 import { cookies } from "next/headers";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { getOAuthClient, verificarEmailToken, revogarToken } from "@/lib/googleCalendar";
-
-const prisma = new PrismaClient();
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
