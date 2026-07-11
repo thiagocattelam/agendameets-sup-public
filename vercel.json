@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/migrar-status",
+      "schedule": "5 3 * * *"
+    }
+  ]
+}
