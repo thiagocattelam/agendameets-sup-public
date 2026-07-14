@@ -222,30 +222,6 @@ export default function DashboardClient() {
     );
   }
 
-  const [syncStatus, setSyncStatus] = useState(null);
-  const [syncLoading, setSyncLoading] = useState(false);
-
-  async function handleSync() {
-    setSyncLoading(true);
-    setSyncStatus(null);
-    try {
-      const res = await fetch("/api/sync-sheets", { method: "POST" });
-      const data = await res.json();
-      if (data.ok) {
-        setSyncStatus({
-          tipo: "sucesso",
-          mensagem: `${data.criados} criados · ${data.ignorados} ignorados`,
-        });
-      } else {
-        setSyncStatus({ tipo: "erro", mensagem: data.error });
-      }
-    } catch {
-      setSyncStatus({ tipo: "erro", mensagem: "Erro ao conectar com a API." });
-    } finally {
-      setSyncLoading(false);
-    }
-  }
-
   const modoAtivo = "bg-purple-600 text-white font-medium shadow-sm";
   const modoInativo = "bg-gray-100 text-gray-500 hover:bg-gray-200";
 
@@ -486,33 +462,6 @@ export default function DashboardClient() {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
-
-      {/* Sincronização com Sheets */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-base font-semibold text-gray-700 mb-1">
-          Google Sheets
-        </h3>
-        <p className="text-sm text-gray-400 mb-4">
-          Importa os agendamentos da planilha para o sistema.
-        </p>
-
-        <button
-          onClick={handleSync}
-          disabled={syncLoading}
-          className="text-white px-4 py-2 rounded-xl text-sm font-medium transition hover:opacity-90 disabled:opacity-60"
-          style={{ backgroundColor: "#8b47ff" }}
-        >
-          {syncLoading ? "Sincronizando..." : "Sincronizar com Sheets"}
-        </button>
-
-        {syncStatus && (
-          <p
-            className={`mt-4 text-sm ${syncStatus.tipo === "sucesso" ? "text-green-600" : "text-red-500"}`}
-          >
-            {syncStatus.mensagem}
-          </p>
         )}
       </div>
     </div>
