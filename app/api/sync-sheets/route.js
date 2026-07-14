@@ -6,7 +6,7 @@ import { criarEvento } from "@/lib/googleCalendar";
 function parseDataHora(dataStr, horaStr) {
   const [dia, mes] = dataStr.split("/");
   const ano = new Date().getFullYear();
-  return new Date(`${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}T${horaStr}:00`);
+  return new Date(`${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}T${horaStr}:00-03:00`);
 }
 
 async function findOrCreate(model, where, create) {
