@@ -298,6 +298,8 @@ export default function AgendamentoModal({
       !form.data ||
       !form.horaInicio ||
       !form.horaFim ||
+      !form.cliente ||
+      !form.linkUmbler ||
       !form.atendenteId ||
       !form.statusId
     )
@@ -575,10 +577,13 @@ export default function AgendamentoModal({
               </label>
               <input
                 type="text"
-                required
                 value={form.cliente}
                 onChange={(e) => setForm({ ...form, cliente: e.target.value })}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className={`border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300 ${
+                  tentouSalvar && !form.cliente
+                    ? "border-red-400 ring-2 ring-red-100"
+                    : "border-gray-200"
+                }`}
               />
             </div>
 
@@ -780,7 +785,11 @@ export default function AgendamentoModal({
                   setForm({ ...form, linkUmbler: e.target.value })
                 }
                 placeholder="https://..."
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className={`border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-300 ${
+                  tentouSalvar && !form.linkUmbler
+                    ? "border-red-400 ring-2 ring-red-100"
+                    : "border-gray-200"
+                }`}
               />
             </div>
 
