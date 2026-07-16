@@ -204,8 +204,11 @@ export default function AgendamentosClient() {
     carregarAgendamentos(novaPagina);
   }
 
+  const LOADING_DELAY_MS = 200;
+
   function carregarAgendamentos(page = pagina) {
     if (!dataInicio || !dataFim) return;
+    const loadingTimer = setTimeout(() => setLoading(true), LOADING_DELAY_MS);
     const inicio = new Date(dataInicio + "T00:00:00").toISOString();
     const fim = new Date(dataFim + "T23:59:59").toISOString();
     const params = new URLSearchParams({ inicio, fim, page, pageSize: PAGE_SIZE });
@@ -213,6 +216,7 @@ export default function AgendamentosClient() {
     fetch(`/api/agendamentos?${params}`)
       .then((r) => r.json())
       .then(({ data, total }) => {
+        clearTimeout(loadingTimer);
         setAgendamentos(data);
         setTotalAgendamentos(total);
         setLoading(false);
