@@ -10,18 +10,18 @@ Sistema de gerenciamento de agendamentos para equipes de atendimento, com autent
 - Importação de agendamentos a partir de uma planilha Google Sheets
 - Sincronização de agendamentos com a Google Agenda pessoal de cada atendente (conexão opt-in)
 - CRUD de atendentes e assuntos
-- Acesso restrito a contas `@clinicaexperts.com.br` via Google OAuth
+- Acesso restrito a contas `@domainexemplo` via Google OAuth
 
 ## Stack
 
-| Camada | Tecnologia |
-|---|---|
-| Framework | Next.js 15 (App Router) |
-| UI | React 19 + Tailwind CSS 4 |
-| Banco de dados | PostgreSQL via Prisma 6 |
-| Autenticação | NextAuth v5 (Google OAuth) |
-| Integrações | Google Sheets API v4, Google Calendar API v3 (`googleapis`) |
-| Runtime | Node.js 24 |
+| Camada         | Tecnologia                                                  |
+| -------------- | ----------------------------------------------------------- |
+| Framework      | Next.js 15 (App Router)                                     |
+| UI             | React 19 + Tailwind CSS 4                                   |
+| Banco de dados | PostgreSQL via Prisma 6                                     |
+| Autenticação   | NextAuth v5 (Google OAuth)                                  |
+| Integrações    | Google Sheets API v4, Google Calendar API v3 (`googleapis`) |
+| Runtime        | Node.js 24                                                  |
 
 ## Arquitetura
 
@@ -77,7 +77,7 @@ O hook `useAlertaAgendamentos` roda no cliente e faz polling a cada 60 segundos 
 
 ### Autenticação
 
-Login exclusivo via Google OAuth. Apenas e-mails do domínio `@clinicaexperts.com.br` são aceitos. O JWT armazena o `atendenteId` do usuário, resolvido pelo e-mail na tabela `Atendente`, e fica disponível em `session.atendenteId` no cliente.
+Login exclusivo via Google OAuth. Apenas e-mails do domínio `@domainexemplo` são aceitos. O JWT armazena o `atendenteId` do usuário, resolvido pelo e-mail na tabela `Atendente`, e fica disponível em `session.atendenteId` no cliente.
 
 ### Importação via Google Sheets
 
@@ -113,6 +113,7 @@ DATABASE_URL="postgresql://usuario:senha@localhost:5432/agendameets"
 AUTH_SECRET="sua-chave-secreta"
 AUTH_GOOGLE_ID="seu-google-client-id"
 AUTH_GOOGLE_SECRET="seu-google-client-secret"
+AUTH_ALLOWED_EMAIL_DOMAINS="@seudominio.com.br"
 
 # Google Sheets (service account)
 GOOGLE_SERVICE_ACCOUNT_JSON='{ ... }'
