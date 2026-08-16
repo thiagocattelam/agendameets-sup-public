@@ -30,7 +30,10 @@ export default function AtendenteModal({
         nome: atendente.nome,
         email: atendente.email ?? "",
         ativo: atendente.ativo,
-        alertaMinutos: atendente.alertaMinutos != null ? String(atendente.alertaMinutos) : "30",
+        alertaMinutos:
+          atendente.alertaMinutos != null
+            ? String(atendente.alertaMinutos)
+            : "30",
       });
     } else {
       setForm({ nome: "", email: "", ativo: true, alertaMinutos: "30" });
@@ -54,7 +57,8 @@ export default function AtendenteModal({
       body: JSON.stringify({
         ...form,
         email: form.email || null,
-        alertaMinutos: form.alertaMinutos !== "" ? Number(form.alertaMinutos) : 30,
+        alertaMinutos:
+          form.alertaMinutos !== "" ? Number(form.alertaMinutos) : 30,
       }),
     });
     onSalvar();
@@ -90,7 +94,7 @@ export default function AtendenteModal({
             <label className="text-sm font-medium">E-mail</label>
             <input
               type="email"
-              placeholder="nome@clinicaexperts.com.br"
+              placeholder={`nome${process.env.NEXT_PUBLIC_AUTH_ALLOWED_EMAIL_DOMAINS}`}
               className="border rounded-lg w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -104,7 +108,14 @@ export default function AtendenteModal({
             <div className="flex items-center border border-gray-200 rounded-lg mt-1 overflow-hidden focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-400">
               <button
                 type="button"
-                onClick={() => setForm({ ...form, alertaMinutos: String(Math.max(1, (Number(form.alertaMinutos) || 1) - 1)) })}
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    alertaMinutos: String(
+                      Math.max(1, (Number(form.alertaMinutos) || 1) - 1),
+                    ),
+                  })
+                }
                 className="px-3 py-2 text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-colors text-sm font-medium select-none"
               >
                 −
@@ -114,11 +125,20 @@ export default function AtendenteModal({
                 placeholder="30"
                 className="flex-1 text-sm text-center text-gray-700 focus:outline-none bg-transparent py-2 min-w-0"
                 value={form.alertaMinutos}
-                onChange={(e) => setForm({ ...form, alertaMinutos: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, alertaMinutos: e.target.value })
+                }
               />
               <button
                 type="button"
-                onClick={() => setForm({ ...form, alertaMinutos: String((Number(form.alertaMinutos) || 0) + 1) })}
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    alertaMinutos: String(
+                      (Number(form.alertaMinutos) || 0) + 1,
+                    ),
+                  })
+                }
                 className="px-3 py-2 text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-colors text-sm font-medium select-none"
               >
                 +

@@ -14,9 +14,15 @@ export default function LoginClient() {
 
         {error === "AccessDenied" && (
           <div className="mb-5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-left">
-            <p className="text-sm font-medium text-red-700">Acesso não permitido</p>
+            <p className="text-sm font-medium text-red-700">
+              Acesso não permitido
+            </p>
             <p className="text-xs text-red-500 mt-0.5">
-              Use sua conta <span className="font-semibold">@clinicaexperts.com.br</span> para entrar.
+              Use sua conta{" "}
+              <span className="font-semibold">
+                {process.env.NEXT_PUBLIC_AUTH_ALLOWED_EMAIL_DOMAINS}
+              </span>{" "}
+              para entrar.
             </p>
           </div>
         )}
