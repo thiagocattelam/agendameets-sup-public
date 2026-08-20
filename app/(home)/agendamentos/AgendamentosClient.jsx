@@ -1,6 +1,16 @@
 "use client";
 import { useState, useEffect, useRef, forwardRef } from "react";
-import { ExternalLink, X, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, NotebookPen } from "lucide-react";
+import {
+  ExternalLink,
+  X,
+  CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  NotebookPen,
+} from "lucide-react";
 import AgendamentoModal from "../../../components/AgendamentoModal";
 import Skeleton from "../../../components/Skeleton";
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -168,10 +178,16 @@ export default function AgendamentosClient() {
   const [atendenteDropdownAberto, setAtendenteDropdownAberto] = useState(false);
 
   useEffect(() => {
+    async function fetchLista(url) {
+      const r = await fetch(url);
+      if (!r.ok) return [];
+      const data = await r.json();
+      return Array.isArray(data) ? data : [];
+    }
     Promise.all([
-      fetch("/api/atendentes").then((r) => r.json()),
-      fetch("/api/status").then((r) => r.json()),
-      fetch("/api/assuntos").then((r) => r.json()),
+      fetchLista("/api/atendentes"),
+      fetchLista("/api/status"),
+      fetchLista("/api/assuntos"),
     ]).then(([at, st, as]) => {
       setAtendentes(at);
       setStatusList(st);
@@ -190,7 +206,10 @@ export default function AgendamentosClient() {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuAberto(null);
       }
-      if (atendenteDropdownRef.current && !atendenteDropdownRef.current.contains(e.target)) {
+      if (
+        atendenteDropdownRef.current &&
+        !atendenteDropdownRef.current.contains(e.target)
+      ) {
         setAtendenteDropdownAberto(false);
       }
     }
@@ -211,7 +230,12 @@ export default function AgendamentosClient() {
     const loadingTimer = setTimeout(() => setLoading(true), LOADING_DELAY_MS);
     const inicio = new Date(dataInicio + "T00:00:00").toISOString();
     const fim = new Date(dataFim + "T23:59:59").toISOString();
-    const params = new URLSearchParams({ inicio, fim, page, pageSize: PAGE_SIZE });
+    const params = new URLSearchParams({
+      inicio,
+      fim,
+      page,
+      pageSize: PAGE_SIZE,
+    });
     if (atendenteId) params.set("atendenteId", atendenteId);
     fetch(`/api/agendamentos?${params}`)
       .then((r) => r.json())
@@ -252,7 +276,7 @@ export default function AgendamentosClient() {
   const totalPaginas = Math.ceil(totalAgendamentos / PAGE_SIZE);
 
   const agrupados = {};
-  for (const ag of agendamentos) {
+  for (const ag of agendamentos || []) {
     const key = toLocalDateKey(ag.dataHoraInicio);
     if (!agrupados[key])
       agrupados[key] = { label: formatDataCabecalho(key), items: [] };
@@ -268,7 +292,10 @@ export default function AgendamentosClient() {
           <h2 className="text-2xl font-semibold text-gray-800">Agendamentos</h2>
           <p className="text-sm text-gray-400 mt-0.5">
             {loading ? (
-              <Skeleton className="h-4 w-24 inline-block align-middle" />
+              <Skeleton
+                as="span"
+                className="h-4 w-24 inline-block align-middle"
+              />
             ) : (
               <>
                 {totalAgendamentos} registro{totalAgendamentos !== 1 ? "s" : ""}
@@ -283,16 +310,28 @@ export default function AgendamentosClient() {
               onClick={() => setAtendenteDropdownAberto((v) => !v)}
               className={`flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none transition-colors whitespace-nowrap w-48 ${atendenteDropdownAberto ? "border-purple-400 ring-2 ring-purple-200" : "border-gray-200 hover:border-gray-300"}`}
             >
-              <span className="truncate">{atendentes.find((a) => String(a.id) === String(atendenteId))?.nome ?? "Todos os atendentes"}</span>
-              <ChevronDown size={14} className={`text-gray-400 transition-transform ${atendenteDropdownAberto ? "rotate-180" : ""}`} />
+              <span className="truncate">
+                {atendentes.find((a) => String(a.id) === String(atendenteId))
+                  ?.nome ?? "Todos os atendentes"}
+              </span>
+              <ChevronDown
+                size={14}
+                className={`text-gray-400 transition-transform ${atendenteDropdownAberto ? "rotate-180" : ""}`}
+              />
             </button>
             {atendenteDropdownAberto && (
               <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-full overflow-hidden">
-                {[{ id: "", nome: "Todos os atendentes" }, ...atendentes.filter((a) => a.ativo)].map((a) => (
+                {[
+                  { id: "", nome: "Todos os atendentes" },
+                  ...atendentes.filter((a) => a.ativo),
+                ].map((a) => (
                   <button
                     key={a.id}
                     type="button"
-                    onClick={() => { handleSetAtendenteId(a.id); setAtendenteDropdownAberto(false); }}
+                    onClick={() => {
+                      handleSetAtendenteId(a.id);
+                      setAtendenteDropdownAberto(false);
+                    }}
                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${String(atendenteId) === String(a.id) ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
                   >
                     {a.nome}
@@ -339,19 +378,38 @@ export default function AgendamentosClient() {
             nextMonthButtonDisabled,
           }) => (
             <div className="flex items-center justify-between px-2 gap-1">
-              <button onClick={decreaseYear} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
+              <button
+                onClick={decreaseYear}
+                type="button"
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition"
+              >
                 <ChevronsLeft size={12} />
               </button>
-              <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30">
+              <button
+                onClick={decreaseMonth}
+                disabled={prevMonthButtonDisabled}
+                type="button"
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30"
+              >
                 <ChevronLeft size={12} />
               </button>
               <span className="flex-1 text-center text-sm font-bold text-gray-700">
-                {date.toLocaleDateString("pt-BR", { month: "long" })} {date.getFullYear()}
+                {date.toLocaleDateString("pt-BR", { month: "long" })}{" "}
+                {date.getFullYear()}
               </span>
-              <button onClick={increaseMonth} disabled={nextMonthButtonDisabled} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30">
+              <button
+                onClick={increaseMonth}
+                disabled={nextMonthButtonDisabled}
+                type="button"
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition disabled:opacity-30"
+              >
                 <ChevronRight size={12} />
               </button>
-              <button onClick={increaseYear} type="button" className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
+              <button
+                onClick={increaseYear}
+                type="button"
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition"
+              >
                 <ChevronsRight size={12} />
               </button>
             </div>
@@ -369,7 +427,9 @@ export default function AgendamentosClient() {
         <div className="flex items-center gap-2">
           {(() => {
             const hojeAtivo = dataInicio === dataFim && dataInicio === hoje();
-            const semanaAtivo = dataInicio === getMondayOf(new Date()) && dataFim === addDays(getMondayOf(new Date()), 6);
+            const semanaAtivo =
+              dataInicio === getMondayOf(new Date()) &&
+              dataFim === addDays(getMondayOf(new Date()), 6);
             const ativo = "bg-purple-600 text-white font-medium shadow-sm";
             const inativo = "bg-gray-100 text-gray-500 hover:bg-gray-200";
             return (
@@ -427,142 +487,147 @@ export default function AgendamentosClient() {
 
       {/* Lista */}
       <div>
-      {loading ? (
-        <SkeletonAgendamentosList />
-      ) : dias.length === 0 ? (
-        <div className="text-center py-20 text-gray-400 text-sm">
-          Nenhum agendamento nesse período.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-8">
-          {dias.map((key) => {
-            const { label, items } = agrupados[key];
-            return (
-              <div key={key}>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 capitalize">
-                  {label}
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {items.map((ag) => (
-                    <div
-                      key={ag.id}
-                      onClick={() => handleEditar(ag)}
-                      className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col gap-1.5 px-5 py-4 relative cursor-pointer hover:shadow-md transition-shadow"
-                      style={{
-                        borderLeftWidth: "4px",
-                        borderLeftColor: ag.status?.corHex ?? "#e5e7eb",
-                      }}
-                    >
-                      {/* Linha superior: horário + status + menu */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-mono text-gray-400">
-                          {formatHora(ag.dataHoraInicio)} –{" "}
-                          {formatHora(ag.dataHoraFim)}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {ag.status && (
-                            <span
-                              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-                              style={{
-                                backgroundColor: ag.status.corHex + "22",
-                                color: ag.status.corHex,
-                              }}
-                            >
+        {loading ? (
+          <SkeletonAgendamentosList />
+        ) : dias.length === 0 ? (
+          <div className="text-center py-20 text-gray-400 text-sm">
+            Nenhum agendamento nesse período.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-8">
+            {dias.map((key) => {
+              const { label, items } = agrupados[key];
+              return (
+                <div key={key}>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 capitalize">
+                    {label}
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {items.map((ag) => (
+                      <div
+                        key={ag.id}
+                        onClick={() => handleEditar(ag)}
+                        className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col gap-1.5 px-5 py-4 relative cursor-pointer hover:shadow-md transition-shadow"
+                        style={{
+                          borderLeftWidth: "4px",
+                          borderLeftColor: ag.status?.corHex ?? "#e5e7eb",
+                        }}
+                      >
+                        {/* Linha superior: horário + status + menu */}
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-mono text-gray-400">
+                            {formatHora(ag.dataHoraInicio)} –{" "}
+                            {formatHora(ag.dataHoraFim)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {ag.status && (
                               <span
-                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: ag.status.corHex }}
-                              />
-                              {ag.status.descricao}
-                            </span>
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setMenuAberto(menuAberto === ag.id ? null : ag.id);
-                            }}
-                            className="text-gray-400 hover:text-gray-700 p-1 rounded transition-colors font-bold text-lg leading-none"
-                          >
-                            ⋮
-                          </button>
+                                className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                                style={{
+                                  backgroundColor: ag.status.corHex + "22",
+                                  color: ag.status.corHex,
+                                }}
+                              >
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: ag.status.corHex }}
+                                />
+                                {ag.status.descricao}
+                              </span>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuAberto(
+                                  menuAberto === ag.id ? null : ag.id,
+                                );
+                              }}
+                              className="text-gray-400 hover:text-gray-700 p-1 rounded transition-colors font-bold text-lg leading-none"
+                            >
+                              ⋮
+                            </button>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Cliente */}
-                      <p className="text-base font-semibold text-gray-800">
-                        {ag.cliente}
-                      </p>
+                        {/* Cliente */}
+                        <p className="text-base font-semibold text-gray-800">
+                          {ag.cliente}
+                        </p>
 
-                      {/* Atendente + assuntos */}
-                      <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-                        <span>{ag.atendente.nome}</span>
-                        {ag.assuntos.length > 0 && (
-                          <>
-                            <span className="text-gray-300">·</span>
-                            <span>
-                              {ag.assuntos.map((a) => a.descricao).join(", ")}
-                            </span>
-                          </>
-                        )}
-                      </div>
+                        {/* Atendente + assuntos */}
+                        <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
+                          <span>{ag.atendente.nome}</span>
+                          {ag.assuntos.length > 0 && (
+                            <>
+                              <span className="text-gray-300">·</span>
+                              <span>
+                                {ag.assuntos.map((a) => a.descricao).join(", ")}
+                              </span>
+                            </>
+                          )}
+                        </div>
 
-                      {/* Link Umbler + Observações */}
-                      <div className="flex items-center gap-3 mt-0.5">
-                        {ag.linkUmbler && (
-                          <a
-                            href={ag.linkUmbler}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-700 hover:underline w-fit"
-                          >
-                            <ExternalLink size={11} />
-                            Abrir no Umbler
-                          </a>
-                        )}
-                        {ag.observacoes && (
-                          <div className="relative group w-fit">
-                            <NotebookPen size={13} className="text-gray-400 hover:text-gray-600 cursor-default transition-colors" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-20 w-64 bg-white border border-gray-200 text-gray-700 text-xs rounded-xl px-3 py-2.5 shadow-lg pointer-events-none whitespace-pre-wrap break-words">
-                              {ag.observacoes}
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-200" />
+                        {/* Link Umbler + Observações */}
+                        <div className="flex items-center gap-3 mt-0.5">
+                          {ag.linkUmbler && (
+                            <a
+                              href={ag.linkUmbler}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-700 hover:underline w-fit"
+                            >
+                              <ExternalLink size={11} />
+                              Abrir no Umbler
+                            </a>
+                          )}
+                          {ag.observacoes && (
+                            <div className="relative group w-fit">
+                              <NotebookPen
+                                size={13}
+                                className="text-gray-400 hover:text-gray-600 cursor-default transition-colors"
+                              />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-20 w-64 bg-white border border-gray-200 text-gray-700 text-xs rounded-xl px-3 py-2.5 shadow-lg pointer-events-none whitespace-pre-wrap break-words">
+                                {ag.observacoes}
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-200" />
+                              </div>
                             </div>
+                          )}
+                        </div>
+
+                        {/* Dropdown menu */}
+                        {menuAberto === ag.id && (
+                          <div
+                            ref={menuRef}
+                            className="absolute right-4 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-36 overflow-hidden"
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditar(ag);
+                              }}
+                              className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleConfirmarExcluir(ag);
+                              }}
+                              className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50"
+                            >
+                              Excluir
+                            </button>
                           </div>
                         )}
                       </div>
-
-                      {/* Dropdown menu */}
-                      {menuAberto === ag.id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-4 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-36 overflow-hidden"
-                        >
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditar(ag);
-                            }}
-                            className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleConfirmarExcluir(ag);
-                            }}
-                            className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50"
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Paginação */}

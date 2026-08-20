@@ -173,7 +173,7 @@ export default function DashboardClient() {
 
   const porProfissional = useMemo(() => {
     const contagem = new Map();
-    for (const ag of agendamentosPeriodo) {
+    for (const ag of agendamentosPeriodo || []) {
       const nome = ag.atendente?.nome ?? "—";
       contagem.set(nome, (contagem.get(nome) ?? 0) + 1);
     }
@@ -194,7 +194,7 @@ export default function DashboardClient() {
     }
 
     const contagem = new Array(7).fill(0);
-    for (const ag of agendamentosMes) {
+    for (const ag of agendamentosMes || []) {
       contagem[new Date(ag.dataHoraInicio).getDay()]++;
     }
 
@@ -209,7 +209,7 @@ export default function DashboardClient() {
 
   const agendamentosOrdenados = useMemo(
     () =>
-      [...agendamentosPeriodo].sort(
+      [...(agendamentosPeriodo || [])].sort(
         (a, b) => new Date(a.dataHoraInicio) - new Date(b.dataHoraInicio),
       ),
     [agendamentosPeriodo],
@@ -336,7 +336,7 @@ export default function DashboardClient() {
           </p>
           {loadingMes ? (
             <SkeletonBarChart />
-          ) : agendamentosMes.length === 0 ? (
+          ) : (agendamentosMes || []).length === 0 ? (
             <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
               Sem agendamentos no mês.
             </div>
@@ -384,7 +384,10 @@ export default function DashboardClient() {
           </h3>
           <p className="text-sm text-gray-400">
             {loadingPeriodo ? (
-              <Skeleton className="h-4 w-40 inline-block align-middle" />
+              <Skeleton
+                as="span"
+                className="h-4 w-40 inline-block align-middle"
+              />
             ) : (
               <>
                 {agendamentosOrdenados.length} registro
@@ -417,48 +420,54 @@ export default function DashboardClient() {
               </thead>
               <tbody>
                 {loadingPeriodo && <SkeletonTableRows />}
-                {!loadingPeriodo && agendamentosOrdenados.map((ag) => (
-                  <tr
-                    key={ag.id}
-                    className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-3 text-gray-700">
-                      {ag.atendente?.nome}
-                    </td>
-                    <td className="px-6 py-3 text-gray-800 font-medium">
-                      {ag.cliente}
-                    </td>
-                    <td className="px-6 py-3 text-gray-500 font-mono">
-                      {new Date(ag.dataHoraInicio).toLocaleDateString("pt-BR")}
-                    </td>
-                    <td className="px-6 py-3 text-gray-500 capitalize">
-                      {new Date(ag.dataHoraInicio).toLocaleDateString("pt-BR", {
-                        weekday: "long",
-                      })}
-                    </td>
-                    <td className="px-6 py-3 text-gray-500 font-mono">
-                      {formatHora(ag.dataHoraInicio)} –{" "}
-                      {formatHora(ag.dataHoraFim)}
-                    </td>
-                    <td className="px-6 py-3">
-                      {ag.status && (
-                        <span
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-                          style={{
-                            backgroundColor: ag.status.corHex + "22",
-                            color: ag.status.corHex,
-                          }}
-                        >
+                {!loadingPeriodo &&
+                  agendamentosOrdenados.map((ag) => (
+                    <tr
+                      key={ag.id}
+                      className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-3 text-gray-700">
+                        {ag.atendente?.nome}
+                      </td>
+                      <td className="px-6 py-3 text-gray-800 font-medium">
+                        {ag.cliente}
+                      </td>
+                      <td className="px-6 py-3 text-gray-500 font-mono">
+                        {new Date(ag.dataHoraInicio).toLocaleDateString(
+                          "pt-BR",
+                        )}
+                      </td>
+                      <td className="px-6 py-3 text-gray-500 capitalize">
+                        {new Date(ag.dataHoraInicio).toLocaleDateString(
+                          "pt-BR",
+                          {
+                            weekday: "long",
+                          },
+                        )}
+                      </td>
+                      <td className="px-6 py-3 text-gray-500 font-mono">
+                        {formatHora(ag.dataHoraInicio)} –{" "}
+                        {formatHora(ag.dataHoraFim)}
+                      </td>
+                      <td className="px-6 py-3">
+                        {ag.status && (
                           <span
-                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: ag.status.corHex }}
-                          />
-                          {ag.status.descricao}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                            style={{
+                              backgroundColor: ag.status.corHex + "22",
+                              color: ag.status.corHex,
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: ag.status.corHex }}
+                            />
+                            {ag.status.descricao}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

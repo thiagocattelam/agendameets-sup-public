@@ -21,8 +21,8 @@ export default function AtendentesClient() {
 
   async function carregarAtendentes() {
     const res = await fetch("/api/atendentes");
-    const data = await res.json();
-    setAtendentes(data);
+    const data = res.ok ? await res.json() : [];
+    setAtendentes(Array.isArray(data) ? data : []);
     setLoading(false);
   }
 
@@ -35,7 +35,10 @@ export default function AtendentesClient() {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuAberto(null);
       }
-      if (filtroDropdownRef.current && !filtroDropdownRef.current.contains(e.target)) {
+      if (
+        filtroDropdownRef.current &&
+        !filtroDropdownRef.current.contains(e.target)
+      ) {
         setFiltroDropdownAberto(false);
       }
     }
@@ -58,7 +61,11 @@ export default function AtendentesClient() {
     });
     setTimeout(() => {
       carregarAtendentes();
-      setPendingToggle((prev) => { const n = { ...prev }; delete n[atendente.id]; return n; });
+      setPendingToggle((prev) => {
+        const n = { ...prev };
+        delete n[atendente.id];
+        return n;
+      });
     }, 700);
   }
 
@@ -97,12 +104,21 @@ export default function AtendentesClient() {
           <h2 className="text-2xl font-semibold text-gray-800">Atendentes</h2>
           <p className="text-sm text-gray-400 mt-0.5">
             {loading ? (
-              <Skeleton className="h-4 w-20 inline-block align-middle" />
+              <Skeleton as="span" className="h-4 w-20 inline-block align-middle" />
             ) : (
               <>
-                {atendentes
-                  .filter((a) => filtroAtivo === "ativos" ? a.ativo : filtroAtivo === "inativos" ? !a.ativo : true)
-                  .filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase())).length} registros
+                {(atendentes || [])
+                  .filter((a) =>
+                    filtroAtivo === "ativos"
+                      ? a.ativo
+                      : filtroAtivo === "inativos"
+                        ? !a.ativo
+                        : true,
+                  )
+                  .filter((a) =>
+                    a.nome.toLowerCase().includes(busca.toLowerCase()),
+                  ).length}{" "}
+                registros
               </>
             )}
           </p>
@@ -123,8 +139,17 @@ export default function AtendentesClient() {
             onClick={() => setFiltroDropdownAberto((v) => !v)}
             className={`flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none transition-colors w-36 ${filtroDropdownAberto ? "border-purple-400 ring-2 ring-purple-200" : "border-gray-200 hover:border-gray-300"}`}
           >
-            <span>{{ ativos: "Ativos", inativos: "Inativos", todos: "Todos" }[filtroAtivo]}</span>
-            <ChevronDown size={14} className={`text-gray-400 transition-transform ${filtroDropdownAberto ? "rotate-180" : ""}`} />
+            <span>
+              {
+                { ativos: "Ativos", inativos: "Inativos", todos: "Todos" }[
+                  filtroAtivo
+                ]
+              }
+            </span>
+            <ChevronDown
+              size={14}
+              className={`text-gray-400 transition-transform ${filtroDropdownAberto ? "rotate-180" : ""}`}
+            />
           </button>
           {filtroDropdownAberto && (
             <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-full overflow-hidden">
@@ -136,7 +161,10 @@ export default function AtendentesClient() {
                 <button
                   key={op.value}
                   type="button"
-                  onClick={() => { setFiltroAtivo(op.value); setFiltroDropdownAberto(false); }}
+                  onClick={() => {
+                    setFiltroAtivo(op.value);
+                    setFiltroDropdownAberto(false);
+                  }}
                   className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${filtroAtivo === op.value ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
                 >
                   {op.label}
@@ -168,86 +196,103 @@ export default function AtendentesClient() {
             </tr>
           </thead>
           <tbody>
-            {loading && Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i} className="border-b border-gray-100">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <Skeleton className="h-5 w-9 rounded-full" />
-                </td>
-                <td className="px-6 py-4" />
-              </tr>
-            ))}
-            {!loading && atendentes
-              .filter((a) => filtroAtivo === "ativos" ? a.ativo : filtroAtivo === "inativos" ? !a.ativo : true)
-              .filter((a) => a.nome.toLowerCase().includes(busca.toLowerCase()))
-              .map((a) => (
-                <tr
-                  key={a.id}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                >
+            {loading &&
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b border-gray-100">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
-                        style={{ backgroundColor: "#ede9fe", color: "#6d28d9" }}
-                      >
-                        {a.nome.slice(0, 2).toUpperCase()}
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">
-                        {a.nome}
-                      </span>
+                      <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                      <Skeleton className="h-4 w-32" />
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => handleToggleAtivo(a)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        (pendingToggle[a.id] ?? a.ativo) ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                          (pendingToggle[a.id] ?? a.ativo) ? "translate-x-4.5" : "translate-x-0.5"
-                        }`}
-                      />
-                    </button>
+                    <Skeleton className="h-5 w-9 rounded-full" />
                   </td>
-                  <td className="px-6 py-4 text-right relative">
-                    <button
-                      onClick={() =>
-                        setMenuAberto(menuAberto === a.id ? null : a.id)
-                      }
-                      className="text-gray-500 hover:text-gray-800 p-1 rounded transition-colors font-bold text-lg leading-none"
-                    >
-                      ⋮
-                    </button>
-                    {menuAberto === a.id && (
-                      <div
-                        ref={menuRef}
-                        className="absolute right-6 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-36 overflow-hidden"
-                      >
-                        <button
-                          onClick={() => handleEditar(a)}
-                          className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleConfirmarExcluir(a)}
-                          className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                  <td className="px-6 py-4" />
                 </tr>
               ))}
+            {!loading &&
+              (atendentes || [])
+                .filter((a) =>
+                  filtroAtivo === "ativos"
+                    ? a.ativo
+                    : filtroAtivo === "inativos"
+                      ? !a.ativo
+                      : true,
+                )
+                .filter((a) =>
+                  a.nome.toLowerCase().includes(busca.toLowerCase()),
+                )
+                .map((a) => (
+                  <tr
+                    key={a.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
+                          style={{
+                            backgroundColor: "#ede9fe",
+                            color: "#6d28d9",
+                          }}
+                        >
+                          {a.nome.slice(0, 2).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-gray-800">
+                          {a.nome}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleToggleAtivo(a)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                          (pendingToggle[a.id] ?? a.ativo)
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                            (pendingToggle[a.id] ?? a.ativo)
+                              ? "translate-x-4.5"
+                              : "translate-x-0.5"
+                          }`}
+                        />
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 text-right relative">
+                      <button
+                        onClick={() =>
+                          setMenuAberto(menuAberto === a.id ? null : a.id)
+                        }
+                        className="text-gray-500 hover:text-gray-800 p-1 rounded transition-colors font-bold text-lg leading-none"
+                      >
+                        ⋮
+                      </button>
+                      {menuAberto === a.id && (
+                        <div
+                          ref={menuRef}
+                          className="absolute right-6 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-36 overflow-hidden"
+                        >
+                          <button
+                            onClick={() => handleEditar(a)}
+                            className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleConfirmarExcluir(a)}
+                            className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
           </tbody>
         </table>
       </div>
@@ -277,7 +322,10 @@ export default function AtendentesClient() {
               </h2>
               <p className="text-sm text-gray-500">
                 Você deseja mesmo excluir o Atendente{" "}
-                <strong className="text-gray-700">{atendenteDeletar?.nome}</strong>?
+                <strong className="text-gray-700">
+                  {atendenteDeletar?.nome}
+                </strong>
+                ?
               </p>
             </div>
             <div className="border-t border-gray-100 px-6 py-4 flex justify-end">

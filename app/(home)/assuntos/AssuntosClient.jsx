@@ -17,8 +17,8 @@ export default function AssuntosClient() {
 
   async function carregarAssuntos() {
     const res = await fetch('/api/assuntos');
-    const data = await res.json();
-    setAssuntos(data);
+    const data = res.ok ? await res.json() : [];
+    setAssuntos(Array.isArray(data) ? data : []);
     setLoading(false);
   }
 
@@ -73,7 +73,7 @@ export default function AssuntosClient() {
           <h2 className="text-2xl font-semibold text-gray-800">Assuntos</h2>
           <p className="text-sm text-gray-400 mt-0.5">
             {loading ? (
-              <Skeleton className="h-4 w-20 inline-block align-middle" />
+              <Skeleton as="span" className="h-4 w-20 inline-block align-middle" />
             ) : (
               <>{assuntos.length} registros</>
             )}
