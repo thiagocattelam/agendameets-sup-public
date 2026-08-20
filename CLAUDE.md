@@ -65,12 +65,12 @@ auth.config.js             # Google provider + pages config (edge-safe, no Prism
 
 ### Data models
 
-| Model | Key fields |
-|---|---|
-| `Atendente` | `nome`, `ativo`, `email?` (unique), `alertaMinutos?` (default 30) |
+| Model         | Key fields                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `Atendente`   | `nome`, `ativo`, `email?` (unique), `alertaMinutos?` (default 30)                                                                   |
 | `Agendamento` | `dataHoraInicio`, `dataHoraFim`, `cliente`, `linkUmbler?`, `observacoes?`, `alertaMinutos?`, FK to Atendente/Status, M2M to Assunto |
-| `Assunto` | `descricao`, M2M to Agendamento |
-| `Status` | `descricao`, `corHex` (hex color for badge display) |
+| `Assunto`     | `descricao`, M2M to Agendamento                                                                                                     |
+| `Status`      | `descricao`, `corHex` (hex color for badge display)                                                                                 |
 
 `Agendamento` ↔ `Assunto` is **many-to-many** (implicit join table). `Agendamento` → `Status` and `Agendamento` → `Atendente` are many-to-one FKs.
 
@@ -80,7 +80,7 @@ auth.config.js             # Google provider + pages config (edge-safe, no Prism
 
 ### Authentication
 
-NextAuth v5 (App Router handlers at `app/api/auth/[...nextauth]`). Google OAuth only. `signIn` callback restricts login to `@clinicaexperts.com.br` emails. The `jwt` callback resolves the user's `Atendente.id` by email and stores it as `token.atendenteId`; `session.atendenteId` is then available client-side via `useSession`.
+NextAuth v5 (App Router handlers at `app/api/auth/[...nextauth]`). Google OAuth only. `signIn` callback restricts login to email domains listed in `AUTH_ALLOWED_EMAIL_DOMAINS`. The `jwt` callback resolves the user's `Atendente.id` by email and stores it as `token.atendenteId`; `session.atendenteId` is then available client-side via `useSession`.
 
 ### Sheets sync
 
